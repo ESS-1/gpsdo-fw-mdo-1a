@@ -1,30 +1,47 @@
-name: CMake
+name: CI Build
+
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-        type: [Debug, Release]
+    name: Build Firmware (MinSizeRel)
+    runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-      with:
-        submodules: recursive
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-    - name: arm-none-eabi-gcc
-      uses: ryanwinter/arm-none-eabi-gcc@master
-      with:
-        release: '10-2021.10'
+      - name: Install Ninja
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build
 
-    - name: Build binary
-      run: |
-        cmake -Bbuild -DCMAKE_BUILD_TYPE="${{ matrix.type }}"
-        cmake --build build
+      - name: Install ARM GNU Toolchain
+        uses: carlosperate/arm-none-eabi-gcc-action@v1
+        with:
+          release: '12.3.rel1'
+
+      - name: Configure CMake
+        run: |
+          cmake --preset MinSizeRel
+
+      - name: Build Firmware
+        run: |
+          cmake --build --preset MinSizeRel
+
+      - name: Archive build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-MinSizeRel
+          path: |
+            build/MinSizeRel/*.bin
+            build/MinSizeRel/*.elf
+            build/MinSizeRel/*.map
+          if-no-files-found: error

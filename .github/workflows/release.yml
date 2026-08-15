@@ -1,42 +1,54 @@
-name: Release
+name: Release Firmware
+
 on:
   push:
     tags:
       - "v*"
 
 jobs:
-  gh_tagged_release:
-    name: "Release"
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-        type: [Release]
+  release:
+    name: Build & Publish Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-      with:
-        submodules: recursive
+      - name: Checkout repository (with history for changelog)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
 
-    - name: arm-none-eabi-gcc
-      uses: ryanwinter/arm-none-eabi-gcc@master
-      with:
-        release: '10-2021.10'
+      - name: Install Ninja
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build
 
-    - name: Build binary
-      run: |
-        cmake -Bbuild -DCMAKE_BUILD_TYPE="${{ matrix.type }}"
-        cmake --build build
-        arm-none-eabi-objcopy -O binary build/gpsdo.elf build/gpsdo.bin
-    
-    - name: Create release
-      uses: "marvinpinto/action-automatic-releases@latest"
-      with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        prerelease: false
-        files: |
-          build/gpsdo.elf
-          build/gpsdo.bin
-          LICENSE.md
-          README.md
+      - name: Install ARM GNU Toolchain
+        uses: carlosperate/arm-none-eabi-gcc-action@v1
+        with:
+          release: '12.3.rel1'
+
+      - name: Configure CMake
+        run: |
+          cmake --preset MinSizeRel
+
+      - name: Build Firmware
+        run: |
+          cmake --build --preset MinSizeRel
+
+      - name: Generate SHA256 Checksums
+        run: |
+          cd build/MinSizeRel
+          sha256sum *.bin *.elf > checksums.sha256
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            build/MinSizeRel/*.bin
+            build/MinSizeRel/*.elf
+            build/MinSizeRel/checksums.sha256
+            LICENSE.md
+            README.md
