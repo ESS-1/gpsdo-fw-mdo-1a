@@ -1452,8 +1452,8 @@ static void ui_proc_out_drv_str(const UIElement* element, UICommand command, int
             ST7735_DrawImage(element->x, element->y, 7, 10, icon);
 
             // Draw output number label
-            char s[3] = { '\0' };
-            snprintf(s, ARRAY_SIZE(s), "%1u:", out);
+            char s[5] = { '\0' };
+            snprintf(s, ARRAY_SIZE(s), "%u:", out);
             ST7735_WriteStringNoWrap(element->x + 7, element->y + 1, element->height - 1, s, Font_7x10, UI_COLOR_OUT_LABEL, UI_COLOR_BG);
         }
     }

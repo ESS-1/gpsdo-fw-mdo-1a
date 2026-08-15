@@ -436,8 +436,7 @@ static bool change_time(int time_source, uint8_t *time_dest, int correction, int
 static void gps_safe_copy_string(char* dst, const char* src, size_t dst_char_count)
 {
     if (src != NULL) {
-        strncpy(dst, src, dst_char_count);
-        dst[dst_char_count - 1] = '\0';
+        strlcpy(dst, src, dst_char_count);
     } else {
         dst[0]   = '\0';
     }
