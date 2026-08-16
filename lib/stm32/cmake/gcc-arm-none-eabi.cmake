@@ -32,10 +32,15 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-unused-parameter -Wpedant
 # However, most GCC toolchains do not support this option, which causes a compilation error; for this reason, the feature is disabled by default.
 # set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fcyclomatic-complexity")
 
-set(CMAKE_C_FLAGS_DEBUG "-O0 -g3")
-set(CMAKE_C_FLAGS_RELEASE "-Os -g0")
-set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
-set(CMAKE_CXX_FLAGS_RELEASE "-Os -g0")
+set(CMAKE_C_FLAGS_DEBUG          "-O0 -g3")
+set(CMAKE_C_FLAGS_RELEASE        "-Os -g0 -DNDEBUG")
+set(CMAKE_C_FLAGS_MINSIZEREL     "-Os -g0 -DNDEBUG")
+set(CMAKE_C_FLAGS_RELWITHDEBINFO "-Os -g3 -DNDEBUG")
+
+set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g3")
+set(CMAKE_CXX_FLAGS_RELEASE        "-Os -g0 -DNDEBUG")
+set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -g0 -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-Os -g3 -DNDEBUG")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fno-rtti -fno-exceptions -fno-threadsafe-statics")
 
