@@ -56,8 +56,10 @@ ENTRY(Reset_Handler)
 MEMORY
 {
 RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 20K
-FLASH (rx)     : ORIGIN = 0x8000000, LENGTH = 126K
-EEPROM (r)     : ORIGIN = 0x801F800, LENGTH = 2K   /* Reserver for EEPROM emulation */
+/* Application Flash region placed right after the bootloader reserved space */
+FLASH (rx)     : ORIGIN = 0x08000000 + __BOOT_SIZE__, LENGTH = __TOTAL_FLASH__ - __BOOT_SIZE__ - __EEPROM_SIZE__
+/* Emulated EEPROM located at the very end of the Flash memory */
+EEPROM (r)     : ORIGIN = 0x08000000 + __TOTAL_FLASH__ - __EEPROM_SIZE__, LENGTH = __EEPROM_SIZE__
 }
 
 /* Highest address of the user mode stack */
@@ -237,6 +239,13 @@ SECTIONS
     . = . + _Min_Stack_Size;
     . = ALIGN(8);
   } >RAM
+
+  .eeprom_section (NOLOAD) :
+  {
+    . = ALIGN(4);
+    *(.eeprom_data)
+    . = ALIGN(4);
+  } > EEPROM
 
 
 

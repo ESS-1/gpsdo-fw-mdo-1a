@@ -81,11 +81,36 @@ set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES
     OUTPUT_NAME "${OUTPUT_FILE_NAME}"
 )
 
+
+# ==============================================================================
+# Flash Memory Layout Configuration
+# ==============================================================================
+# Sizes defined in Kilobytes (KB)
+set(TOTAL_FLASH_KB      128)        # Total Flash memory
+set(BOOTLOADER_KB       16)         # Reserved bootloader space
+set(EEPROM_KB           1)          # Reserved space for EEPROM emulation
+
+
+# Convert to byte offsets and addresses
+math(EXPR BOOT_OFFSET_BYTES "${BOOTLOADER_KB} * 1024")
+math(EXPR BOOT_OFFSET_HEX   "${BOOT_OFFSET_BYTES}" OUTPUT_FORMAT HEXADECIMAL)
+math(EXPR APP_BASE_ADDR     "0x08000000 + ${BOOT_OFFSET_BYTES}" OUTPUT_FORMAT HEXADECIMAL)
+
 target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
     # Pass the model, FW version, and FW type to compiler
     BUILD_FW_VERSION="${FW_VERSION}"
     BUILD_FW_TYPE="${FW_TYPE}"
     BUILD_FW_MODEL="${FW_MODEL}"
+    # Relocate the Vector Table Offset for bootloader compatibility
+    USER_VECT_TAB_ADDRESS
+    VECT_TAB_OFFSET=${BOOT_OFFSET_HEX}U
+)
+
+# Pass memory layout symbols to LD
+target_link_options(${CMAKE_PROJECT_NAME} PRIVATE
+    -Wl,--defsym=__TOTAL_FLASH__=${TOTAL_FLASH_KB}K
+    -Wl,--defsym=__BOOT_SIZE__=${BOOTLOADER_KB}K
+    -Wl,--defsym=__EEPROM_SIZE__=${EEPROM_KB}K
 )
 
 # Generate '.bin' from the compiled '.elf'
@@ -93,4 +118,16 @@ add_custom_command(
     TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${CMAKE_PROJECT_NAME}> ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_FILE_NAME}.bin
     COMMENT "Generating BIN file: ${OUTPUT_FILE_NAME}.bin"
+)
+
+# Generate '.uf2' from the compiled '.bin'
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+add_custom_command(
+    TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/uf2/uf2conv.py
+            ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_FILE_NAME}.bin
+            -b ${APP_BASE_ADDR}
+            -f ${UF2_FAMILY_ID}
+            -o ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_FILE_NAME}.uf2
+    COMMENT "Generating UF2 file: ${OUTPUT_FILE_NAME}.uf2"
 )
