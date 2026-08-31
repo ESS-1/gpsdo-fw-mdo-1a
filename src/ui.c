@@ -93,21 +93,21 @@ static void ui_proc_menu_page_left(const UIElement* element, UICommand command, 
 static void ui_proc_menu_page_right(const UIElement* element, UICommand command, int32_t encoder_step, UIScreen* right_page);
 static void ui_proc_menu_page_left_inactive(const UIElement* element, UICommand command, int32_t encoder_step);
 static void ui_proc_menu_page_right_inactive(const UIElement* element, UICommand command, int32_t encoder_step);
-static void ui_proc_checkbox_ee(const UIElement* element, UICommand command, int32_t encoder_step, const char* label, uint8_t* ee_setting);
-static void ui_proc_checkbox_local(const UIElement* element, UICommand command, int32_t encoder_step, const char* label, bool* setting);
+static void ui_proc_checkbox_ee(const UIElement* element, UICommand command, int32_t encoder_step, const char* label, volatile uint8_t* ee_setting);
+static void ui_proc_checkbox_local(const UIElement* element, UICommand command, int32_t encoder_step, const char* label, volatile bool* setting);
 static void ui_proc_menu_readonly_u32(const UIElement* element, UICommand command, int32_t encoder_step,
     const char* label, uint32_t* ui_cache, uint32_t value, uint16_t value_offset, const char* fmt);
 static void ui_proc_menu_readonly_i32(const UIElement* element, UICommand command, int32_t encoder_step,
     const char* label, int32_t* ui_cache, int32_t value, uint16_t value_offset, const char* fmt);
 static void ui_proc_menu_edit_custom_u32(const UIElement* element, UICommand command, int32_t encoder_step,
-    const char* label, uint32_t* ui_cache, uint32_t* ui_edit, uint32_t *ee_setting, uint16_t value_offset,
+    const char* label, uint32_t* ui_cache, uint32_t* ui_edit, volatile uint32_t *ee_setting, uint16_t value_offset,
     void (*apply_value)(uint32_t), void (*change_value)(uint32_t*, int32_t), void (*format)(char*, size_t, const char*, uint32_t), const char* format_param);
 static void ui_format_u32(char* buf, size_t buf_char_count, const char* fmt, uint32_t value);
 static void ui_proc_menu_edit_u32(const UIElement* element, UICommand command, int32_t encoder_step,
-    const char* label, uint32_t* ui_cache, uint32_t* ui_edit, uint32_t *ee_setting, uint16_t value_offset, const char* fmt,
+    const char* label, uint32_t* ui_cache, uint32_t* ui_edit, volatile uint32_t *ee_setting, uint16_t value_offset, const char* fmt,
     void (*apply_value)(uint32_t), void (*change_value)(uint32_t*, int32_t));
 static void ui_proc_menu_edit_enum_u8(const UIElement* element, UICommand command, int32_t encoder_step,
-    const char* label, uint8_t* ui_edit, uint8_t* ee_setting, uint16_t value_offset, uint8_t max_value,
+    const char* label, uint8_t* ui_edit, volatile uint8_t* ee_setting, uint16_t value_offset, uint8_t max_value,
     void (*before_apply)(uint8_t), const char* (*value_to_string)(uint8_t));
 static void ui_proc_menu_string_parameter(const UIElement* element, UICommand command, int32_t encoder_step,
     const char* label, uint32_t* ui_cache_gga, const char* value, size_t value_char_count);
@@ -717,7 +717,7 @@ static void ui_proc_menu_page_right_inactive(const UIElement* element, UICommand
     ui_proc_menu_page_switch(element, command, encoder_step, icon_page_right_inactive_10x15, NULL);
 }
 
-static void ui_proc_checkbox_ee(const UIElement* element, UICommand command, int32_t encoder_step, const char* label, uint8_t* ee_setting)
+static void ui_proc_checkbox_ee(const UIElement* element, UICommand command, int32_t encoder_step, const char* label, volatile uint8_t* ee_setting)
 {
     // Draw label
     ui_static_label(element, command, label, UI_COLOR_MENU_LABEL);
@@ -735,7 +735,7 @@ static void ui_proc_checkbox_ee(const UIElement* element, UICommand command, int
     ui_default_element_proc(element, command, encoder_step);
 }
 
-static void ui_proc_checkbox_local(const UIElement* element, UICommand command, int32_t encoder_step, const char* label, bool* setting)
+static void ui_proc_checkbox_local(const UIElement* element, UICommand command, int32_t encoder_step, const char* label, volatile bool* setting)
 {
     // Draw label
     ui_static_label(element, command, label, UI_COLOR_MENU_LABEL);
@@ -777,10 +777,10 @@ static void ui_proc_menu_readonly_i32(const UIElement* element, UICommand comman
 }
 
 static void ui_proc_menu_edit_custom_u32(const UIElement* element, UICommand command, int32_t encoder_step,
-    const char* label, uint32_t* ui_cache, uint32_t* ui_edit, uint32_t *ee_setting, uint16_t value_offset,
+    const char* label, uint32_t* ui_cache, uint32_t* ui_edit, volatile uint32_t *ee_setting, uint16_t value_offset,
     void (*apply_value)(uint32_t), void (*change_value)(uint32_t*, int32_t), void (*format)(char*, size_t, const char*, uint32_t), const char* format_param)
 {
-    const uint32_t *value_to_draw = NULL;
+    volatile const uint32_t *value_to_draw = NULL;
     bool is_captured = ui_is_captured(element);
 
     if (command & UICommand_Release) {
@@ -851,7 +851,7 @@ static void ui_format_u32(char* buf, size_t buf_char_count, const char* fmt, uin
 }
 
 static void ui_proc_menu_edit_u32(const UIElement* element, UICommand command, int32_t encoder_step,
-    const char* label, uint32_t* ui_cache, uint32_t* ui_edit, uint32_t *ee_setting, uint16_t value_offset, const char* fmt,
+    const char* label, uint32_t* ui_cache, uint32_t* ui_edit, volatile uint32_t *ee_setting, uint16_t value_offset, const char* fmt,
     void (*apply_value)(uint32_t), void (*change_value)(uint32_t*, int32_t))
 {
     ui_proc_menu_edit_custom_u32(element, command, encoder_step,
@@ -860,10 +860,10 @@ static void ui_proc_menu_edit_u32(const UIElement* element, UICommand command, i
 }
 
 static void ui_proc_menu_edit_enum_u8(const UIElement* element, UICommand command, int32_t encoder_step,
-    const char* label, uint8_t* ui_edit, uint8_t* ee_setting, uint16_t value_offset, uint8_t max_value,
+    const char* label, uint8_t* ui_edit, volatile uint8_t* ee_setting, uint16_t value_offset, uint8_t max_value,
     void (*before_apply)(uint8_t), const char* (*value_to_string)(uint8_t))
 {
-    const uint8_t* value_to_draw = NULL;
+    volatile const uint8_t* value_to_draw = NULL;
 
     if (command & UICommand_Release) {
         // Apply changes
@@ -2908,9 +2908,9 @@ static void ui_proc_menu_pps_auto_sync(const UIElement* element, UICommand comma
 }
 
 static void ui_proc_menu_auto_sync_param_edit(const UIElement* element, UICommand command, int32_t encoder_step,
-    const char* label, uint8_t* ui_cache_auto_sync, uint32_t* ui_edit, uint32_t *ee_setting, uint32_t max_value, uint16_t value_offset, const char* fmt)
+    const char* label, uint8_t* ui_cache_auto_sync, uint32_t* ui_edit, volatile uint32_t *ee_setting, uint32_t max_value, uint16_t value_offset, const char* fmt)
 {
-    const uint32_t *value_to_draw = NULL;
+    volatile const uint32_t *value_to_draw = NULL;
     bool is_captured = ui_is_captured(element);
 
     if (command & UICommand_Release) {

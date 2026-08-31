@@ -11,23 +11,23 @@ typedef struct
     uint16_t pwm;
     uint8_t  brightness;
     /* Reading boolean from EEPROM results in unpredictable behavior so we use a char and cast it to a boolean */
-    uint8_t  pps_auto_sync;
-    uint32_t pps_sync_delay;
-    uint32_t pps_sync_threshold;
+    volatile uint8_t  pps_auto_sync;
+    volatile uint32_t pps_sync_delay;
+    volatile uint32_t pps_sync_threshold;
     uint8_t  pps_sync_on_ppb_lock;
     uint8_t  trend_h_scale;
     uint8_t  trend_v_scale;
     uint8_t  gps_model;
     uint32_t gps_baudrate;
     uint32_t gps_time_offset;
-    uint32_t ppb_lock_threshold;
+    volatile uint32_t ppb_lock_threshold;
     uint16_t pll_out1_preset;
     uint16_t pll_out2_preset;
     uint8_t  pll_out1_drive_strength;
     uint8_t  pll_out2_drive_strength;
     uint8_t  ocxo_model;
-    uint8_t  correction_algorithm;
-    uint32_t correction_factor;
+    volatile uint8_t  correction_algorithm;
+    volatile uint32_t correction_factor;
     uint32_t warmup_time_seconds;
 } ee_storage_t;
 
