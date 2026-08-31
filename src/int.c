@@ -30,7 +30,7 @@ volatile uint32_t        pps_sync_count      = 0;
 volatile bool            sync_pps_out        = false;
 volatile bool            is_ppb_current      = false;
 volatile bool            gps_lock_status     = false;
-bool                     suppress_adjustment = false;
+volatile bool            suppress_adjustment = false;
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
 {

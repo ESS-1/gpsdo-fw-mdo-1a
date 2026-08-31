@@ -40,9 +40,9 @@ static int8_t gps_day_offset  = 0; // -1/+1
 // Store last frame receive time
 uint32_t last_frame_receive_time = 0;
 
-uint32_t gps_invalid_frames      = 0;
-uint32_t gps_fifo_overflow_gps   = 0;
-uint32_t gps_fifo_overflow_comm  = 0;
+uint32_t          gps_invalid_frames      = 0;
+volatile uint32_t gps_fifo_overflow_gps   = 0;
+volatile uint32_t gps_fifo_overflow_comm  = 0;
 
 static uint32_t gps_last_pgdos_generated_sec = 0;
 
