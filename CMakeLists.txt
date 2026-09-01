@@ -129,5 +129,6 @@ add_custom_command(
             -b ${APP_BASE_ADDR}
             -f ${UF2_FAMILY_ID}
             -o ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_FILE_NAME}.uf2
+            --convert
     COMMENT "Generating UF2 file: ${OUTPUT_FILE_NAME}.uf2"
 )
