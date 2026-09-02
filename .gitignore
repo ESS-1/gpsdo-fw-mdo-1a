@@ -1,13 +1,2 @@
-build
-.cache
-.ninja_deps
-.ninja_log
-.project
-build.ninja
-cmake_install.cmake
-CMakeCache.txt
-compile_commands.json
-gpsdo.map
-.vscode/
-.vs/
-CMakeFiles/
+/build/
+/.vs/
