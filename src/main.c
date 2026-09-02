@@ -82,7 +82,7 @@ void init_ext_clock()
     HAL_Delay(750);
 }
 
-void enable_usb()
+static void enable_usb()
 {
     // Turn on 1.5K USB D+ pull-up
     HAL_GPIO_WritePin(USB_DP_PULLUP_GPIO_Port, USB_DP_PULLUP_Pin, GPIO_PIN_SET);
