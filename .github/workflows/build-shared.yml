@@ -1,0 +1,59 @@
+name: Shared Build Workflow
+
+on:
+  workflow_call:
+
+jobs:
+  build:
+    name: Build Firmware (MinSizeRel)
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+
+    steps:
+      - name: Setup Toolchain
+        run: |
+          # Pin Arch Linux package repository snapshot
+          sed -i 's/CheckSpace/#CheckSpace/' /etc/pacman.conf
+          echo 'Server = https://archive.archlinux.org/repos/2026/09/12/$repo/os/$arch' > /etc/pacman.d/mirrorlist
+          pacman -Syy --noconfirm
+          pacman -S --noconfirm --needed \
+            git \
+            cmake \
+            ninja \
+            arm-none-eabi-gcc \
+            arm-none-eabi-binutils \
+            arm-none-eabi-newlib
+
+      - name: Configure Git Safe Directory
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Display Tools Version
+        run: |
+          arm-none-eabi-gcc --version
+          arm-none-eabi-ld --version
+          cmake --version
+          ninja --version
+
+      - name: Configure CMake
+        run: cmake --preset MinSizeRel
+
+      - name: Build Firmware
+        run: cmake --build --preset MinSizeRel
+
+      - name: Archive Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-MinSizeRel
+          path: |
+            build/MinSizeRel/*.bin
+            build/MinSizeRel/*.elf
+            build/MinSizeRel/*.uf2
+            build/MinSizeRel/*.map
+          if-no-files-found: error
+          retention-days: 7

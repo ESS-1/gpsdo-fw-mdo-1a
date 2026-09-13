@@ -6,49 +6,42 @@ on:
       - "v*"
 
 jobs:
+  build:
+    uses: ./.github/workflows/build-shared.yml
+
   release:
-    name: Build & Publish Release
+    name: Publish GitHub Release
+    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write
 
     steps:
-      - name: Checkout repository (with history for changelog)
+      - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Install Ninja
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ninja-build
-
-      - name: Install ARM GNU Toolchain
-        uses: carlosperate/arm-none-eabi-gcc-action@v1
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
         with:
-          release: '13.3.Rel1'
-
-      - name: Configure CMake
-        run: |
-          cmake --preset MinSizeRel
-
-      - name: Build Firmware
-        run: |
-          cmake --build --preset MinSizeRel
+          name: firmware-MinSizeRel
+          path: artifacts
 
       - name: Generate SHA256 Checksums
         run: |
-          cd build/MinSizeRel
-          sha256sum *.bin *.elf > checksums.sha256
+          cd artifacts
+          sha256sum *.bin *.elf *.uf2 > checksums.sha256
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
           files: |
-            build/MinSizeRel/*.bin
-            build/MinSizeRel/*.elf
-            build/MinSizeRel/checksums.sha256
+            artifacts/*.bin
+            artifacts/*.elf
+            artifacts/*.uf2
+            artifacts/checksums.sha256
             LICENSE.md
             README.md

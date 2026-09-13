@@ -9,40 +9,4 @@ on:
 
 jobs:
   build:
-    name: Build Firmware (MinSizeRel)
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Install Ninja
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ninja-build
-
-      - name: Install ARM GNU Toolchain
-        uses: carlosperate/arm-none-eabi-gcc-action@v1
-        with:
-          release: '13.3.Rel1'
-
-      - name: Configure CMake
-        run: |
-          cmake --preset MinSizeRel
-
-      - name: Build Firmware
-        run: |
-          cmake --build --preset MinSizeRel
-
-      - name: Archive build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: firmware-MinSizeRel
-          path: |
-            build/MinSizeRel/*.bin
-            build/MinSizeRel/*.elf
-            build/MinSizeRel/*.map
-          if-no-files-found: error
-          retention-days: 7
+    uses: ./.github/workflows/build-shared.yml
