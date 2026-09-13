@@ -21,6 +21,7 @@ jobs:
             git \
             cmake \
             ninja \
+            python \
             arm-none-eabi-gcc \
             arm-none-eabi-binutils \
             arm-none-eabi-newlib
@@ -39,6 +40,7 @@ jobs:
           arm-none-eabi-ld --version
           cmake --version
           ninja --version
+          python --version
 
       - name: Configure CMake
         run: cmake --preset MinSizeRel
