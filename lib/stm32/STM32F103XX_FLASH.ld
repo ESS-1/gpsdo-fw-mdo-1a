@@ -57,7 +57,9 @@ MEMORY
 {
 RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 20K
 /* Application Flash region placed right after the bootloader reserved space */
-FLASH (rx)     : ORIGIN = 0x08000000 + __BOOT_SIZE__, LENGTH = __TOTAL_FLASH__ - __BOOT_SIZE__ - __EEPROM_SIZE__
+FLASH (rx)     : ORIGIN = 0x08000000 + __BOOT_SIZE__, LENGTH = __TOTAL_FLASH__ - __BOOT_SIZE__ - __METADATA_SIZE__ - __EEPROM_SIZE__
+/* HW ID and CRC */
+METADATA (r)   : ORIGIN = 0x08000000 + (__TOTAL_FLASH__ - __EEPROM_SIZE__ - __METADATA_SIZE__), LENGTH = __METADATA_SIZE__
 /* Emulated EEPROM located at the very end of the Flash memory */
 EEPROM (r)     : ORIGIN = 0x08000000 + __TOTAL_FLASH__ - __EEPROM_SIZE__, LENGTH = __EEPROM_SIZE__
 }
@@ -239,6 +241,13 @@ SECTIONS
     . = . + _Min_Stack_Size;
     . = ALIGN(8);
   } >RAM
+
+  .metadata_section :
+  {
+    . = ALIGN(4);
+    KEEP(*(.metadata))
+    . = ALIGN(4);
+  } > METADATA
 
   .eeprom_section (NOLOAD) :
   {
