@@ -242,11 +242,17 @@ SECTIONS
     . = ALIGN(8);
   } >RAM
 
-  .metadata_section :
+  .app_metadata :
   {
     . = ALIGN(4);
-    KEEP(*(.metadata))
+    KEEP(*(.app_metadata))
     . = ALIGN(4);
+  } > METADATA
+
+  .crc32 ORIGIN(METADATA) + LENGTH(METADATA) - 4 :
+  {
+    /* Placeholder for CRC32, to be filled in by the build system */
+    LONG(0x00000000);
   } > METADATA
 
   .eeprom_section (NOLOAD) :
@@ -257,7 +263,6 @@ SECTIONS
   } > EEPROM
 
 
-
   /* Remove information from the standard libraries */
   /DISCARD/ :
   {
@@ -265,5 +270,4 @@ SECTIONS
     libm.a:* ( * )
     libgcc.a:* ( * )
   }
-
 }
