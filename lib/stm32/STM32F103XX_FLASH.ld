@@ -173,11 +173,20 @@ SECTIONS
   .tdata : ALIGN(4)
   {
     *(.tdata .tdata.* .gnu.linkonce.td.*)
-    . = ALIGN(4);
-    _edata = .;        /* define a global symbol at data end */
-    PROVIDE(__data_end = .);
-    PROVIDE(__tdata_end = .);
   } >RAM AT> FLASH
+  /*
+   * WORKAROUND for GNU ld / objcopy:
+   * Moving location counter alignment and end symbols outside of the .tdata
+   * block ensures that GNU ld collapses this section when it is empty.
+   * If symbols are placed inside an empty .tdata, ld creates an empty section
+   * with LMA set to RAM, causing objcopy to inflate the binary to ~400MB
+   * when using the --gap-fill option.
+   */
+  . = ALIGN(4);
+  _edata = .;        /* define a global symbol at data end */
+  PROVIDE(__data_end = .);
+  PROVIDE(__tdata_end = .);
+
 
   PROVIDE( __tdata_start = ADDR(.tdata) );
   PROVIDE( __tdata_size = __tdata_end - __tdata_start );

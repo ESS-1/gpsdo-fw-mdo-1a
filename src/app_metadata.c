@@ -1,4 +1,3 @@
-
 #include <stdint.h>
 
 typedef struct __attribute__((packed)) {
