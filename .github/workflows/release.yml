@@ -35,13 +35,15 @@ jobs:
           sha256sum *.bin *.elf *.uf2 > checksums.sha256
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v3
-        with:
-          generate_release_notes: true
-          files: |
-            artifacts/*.bin
-            artifacts/*.elf
-            artifacts/*.uf2
-            artifacts/checksums.sha256
-            LICENSE.md
-            README.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            artifacts/*.bin \
+            artifacts/*.elf \
+            artifacts/*.uf2 \
+            artifacts/checksums.sha256 \
+            LICENSE.md \
+            README.md \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes
