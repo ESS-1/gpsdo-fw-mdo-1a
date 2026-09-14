@@ -4,6 +4,17 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Release tag (e.g. v1.0.0)"
+        required: true
+        type: string
+      draft:
+        description: "Create as draft"
+        required: false
+        type: boolean
+        default: true
 
 jobs:
   build:
@@ -37,13 +48,27 @@ jobs:
       - name: Create GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_TAG: ${{ inputs.tag_name }}
+          IS_DRAFT: ${{ inputs.draft }}
         run: |
-          gh release create "$GITHUB_REF_NAME" \
+          # Determine the release tag:
+          RELEASE_TAG="${INPUT_TAG:-$GITHUB_REF_NAME}"
+          echo "Target release tag: $RELEASE_TAG"
+
+          # Add --draft flag if manual run has draft enabled:
+          EXTRA_FLAGS=""
+          if [ "$IS_DRAFT" = "true" ]; then
+            echo "Creating release as a DRAFT (unpublished)."
+            EXTRA_FLAGS="--draft"
+          fi
+
+          gh release create "$RELEASE_TAG" \
             artifacts/*.bin \
             artifacts/*.elf \
             artifacts/*.uf2 \
             artifacts/checksums.sha256 \
             LICENSE.md \
             README.md \
-            --title "$GITHUB_REF_NAME" \
-            --generate-notes
+            --title "$RELEASE_TAG" \
+            --generate-notes \
+            $EXTRA_FLAGS

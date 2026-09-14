@@ -36,6 +36,7 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
 # Add sources to executable
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
+    src/app_metadata.c
     src/main.c
     src/eeprom.c
     src/frequency.c
@@ -89,6 +90,7 @@ set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES
 set(TOTAL_FLASH_KB      128)        # Total Flash memory
 set(BOOTLOADER_KB       16)         # Reserved bootloader space
 set(EEPROM_KB           1)          # Reserved space for EEPROM emulation
+set(METADATA_BYTES      24)         # Reserved space for metadata (HW ID, CRC)
 
 
 # Convert to byte offsets and addresses
@@ -101,6 +103,7 @@ target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
     BUILD_FW_VERSION="${FW_VERSION}"
     BUILD_FW_TYPE="${FW_TYPE}"
     BUILD_FW_MODEL="${FW_MODEL}"
+    BUILD_FW_HWID="${FW_HWID}"
     # Relocate the Vector Table Offset for bootloader compatibility
     USER_VECT_TAB_ADDRESS
     VECT_TAB_OFFSET=${BOOT_OFFSET_HEX}U
@@ -111,6 +114,7 @@ target_link_options(${CMAKE_PROJECT_NAME} PRIVATE
     -Wl,--defsym=__TOTAL_FLASH__=${TOTAL_FLASH_KB}K
     -Wl,--defsym=__BOOT_SIZE__=${BOOTLOADER_KB}K
     -Wl,--defsym=__EEPROM_SIZE__=${EEPROM_KB}K
+    -Wl,--defsym=__METADATA_SIZE__=${METADATA_BYTES}
 )
 
 # Generate '.bin' from the compiled '.elf'
