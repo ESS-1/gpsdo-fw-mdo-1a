@@ -117,6 +117,8 @@ target_link_options(${CMAKE_PROJECT_NAME} PRIVATE
     -Wl,--defsym=__METADATA_SIZE__=${METADATA_BYTES}
 )
 
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
 # Generate '.bin' from the compiled '.elf'
 add_custom_command(
     TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
@@ -124,11 +126,19 @@ add_custom_command(
     COMMENT "Generating BIN file: ${OUTPUT_FILE_NAME}.bin"
 )
 
-# Generate '.uf2' from the compiled '.bin'
-find_package(Python3 REQUIRED COMPONENTS Interpreter)
+# Update CRC32 in '.bin' and '.elf' files after build
 add_custom_command(
     TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
-    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/uf2/uf2conv.py
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/crc/update_crc.py
+            ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_FILE_NAME}.bin
+            $<TARGET_FILE:${CMAKE_PROJECT_NAME}>
+    COMMENT "Calculating CRC32 and patching BIN and ELF"
+)
+
+# Generate '.uf2' from the compiled '.bin'
+add_custom_command(
+    TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/uf2/uf2conv.py
             ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_FILE_NAME}.bin
             -b ${APP_BASE_ADDR}
             -f ${UF2_FAMILY_ID}

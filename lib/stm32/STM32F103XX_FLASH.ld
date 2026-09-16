@@ -258,11 +258,14 @@ SECTIONS
     . = ALIGN(4);
   } > METADATA
 
-  .crc32 ORIGIN(METADATA) + LENGTH(METADATA) - 4 :
+  .crc32 :
   {
-    /* Placeholder for CRC32, to be filled in by the build system */
+    /* 4-byte placeholder for CRC32, patched by post-build script */
     LONG(0x00000000);
   } > METADATA
+
+  ASSERT(SIZEOF(.app_metadata) + SIZEOF(.crc32) == __METADATA_SIZE__,
+         "Error: Invalid .app_metadata size. Please verify that the metadata structure is defined and its size matches the allocated region.")
 
   .eeprom_section (NOLOAD) :
   {
