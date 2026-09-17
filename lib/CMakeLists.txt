@@ -33,4 +33,4 @@ target_link_libraries(eeprom INTERFACE stm32cubemx)
 target_link_libraries(st7735 INTERFACE stm32cubemx)
 target_link_libraries(si5351 INTERFACE stm32cubemx)
 
-add_subdirectory(stm32/cmake/stm32cubemx)
+add_subdirectory(stm32)

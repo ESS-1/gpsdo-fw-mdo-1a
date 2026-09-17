@@ -30,10 +30,6 @@ add_executable(${CMAKE_PROJECT_NAME})
 
 add_subdirectory(lib)
 
-# Link directories setup
-target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
-)
-
 # Add sources to executable
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     src/app_metadata.c
@@ -55,17 +51,8 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     src/timer.c
 )
 
-# Add include paths
-target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
-)
-
-# Add project symbols (macros)
-target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
-)
-
 # Add linked libraries
 target_link_libraries(${CMAKE_PROJECT_NAME}
-    stm32cubemx
     eeprom
     st7735
     si5351
@@ -86,7 +73,7 @@ set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES
 # ==============================================================================
 # Flash Memory Layout Configuration
 # ==============================================================================
-# Sizes defined in Kilobytes (KB)
+# Sizes defined in KB
 set(TOTAL_FLASH_KB      128)        # Total Flash memory
 set(BOOTLOADER_KB       16)         # Reserved bootloader space
 set(EEPROM_KB           1)          # Reserved space for EEPROM emulation
@@ -122,7 +109,10 @@ find_package(Python3 REQUIRED COMPONENTS Interpreter)
 # Generate '.bin' from the compiled '.elf'
 add_custom_command(
     TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_OBJCOPY} -O binary --gap-fill 0xFF $<TARGET_FILE:${CMAKE_PROJECT_NAME}> ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_FILE_NAME}.bin
+    COMMAND ${CMAKE_OBJCOPY} -O binary
+            --gap-fill 0xFF
+            $<TARGET_FILE:${CMAKE_PROJECT_NAME}>
+            ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_FILE_NAME}.bin
     COMMENT "Generating BIN file: ${OUTPUT_FILE_NAME}.bin"
 )
 
