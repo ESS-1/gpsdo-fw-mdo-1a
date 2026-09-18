@@ -37,7 +37,7 @@ jobs:
       - name: Download Build Artifacts
         uses: actions/download-artifact@v8
         with:
-          name: firmware-MinSizeRel
+          name: firmware-app
           path: artifacts
 
       - name: Generate SHA256 Checksums

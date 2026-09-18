@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    name: Build Firmware (MinSizeRel)
+    name: Build Firmware
     runs-on: ubuntu-latest
     container:
       image: archlinux:latest
@@ -51,7 +51,7 @@ jobs:
       - name: Archive Build Artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: firmware-MinSizeRel
+          name: firmware-app
           path: |
             build/MinSizeRel/*.bin
             build/MinSizeRel/*.elf
