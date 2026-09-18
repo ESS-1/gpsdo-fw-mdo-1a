@@ -37,7 +37,7 @@ jobs:
       - name: Download Build Artifacts
         uses: actions/download-artifact@v8
         with:
-          name: firmware-app
+          name: MDO-1A-app
           path: artifacts
 
       - name: Generate SHA256 Checksums

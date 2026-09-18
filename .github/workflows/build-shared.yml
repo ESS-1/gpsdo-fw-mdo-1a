@@ -51,7 +51,7 @@ jobs:
       - name: Archive Build Artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: firmware-app
+          name: MDO-1A-app
           path: |
             build/MinSizeRel/*.bin
             build/MinSizeRel/*.elf
