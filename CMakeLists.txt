@@ -75,7 +75,7 @@ set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES
 # ==============================================================================
 # Sizes defined in KB
 set(TOTAL_FLASH_KB      128)        # Total Flash memory
-set(BOOTLOADER_KB       16)         # Reserved bootloader space
+set(BOOTLOADER_KB       14)         # Reserved bootloader space
 set(EEPROM_KB           1)          # Reserved space for EEPROM emulation
 set(METADATA_BYTES      24)         # Reserved space for metadata (HW ID, CRC)
 
