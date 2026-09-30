@@ -2187,7 +2187,7 @@ static void ui_proc_menu_main_sn(const UIElement* element, UICommand command, in
 
 static void ui_proc_menu_main_version(const UIElement* element, UICommand command, int32_t encoder_step)
 {
-    ui_proc_menu_readonly_entry(element, command, encoder_step, "Version:", 12, BUILD_FW_VERSION "/" BUILD_FW_TYPE);
+    ui_proc_menu_readonly_entry(element, command, encoder_step, "Version:", 16, BUILD_FW_VERSION);
 }
 
 static void ui_proc_menu_main_mcu_flash(const UIElement* element, UICommand command, int32_t encoder_step)

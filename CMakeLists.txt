@@ -62,7 +62,7 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
 include("${CMAKE_CURRENT_SOURCE_DIR}/version.cmake")
 
 # Construct output filename
-set(OUTPUT_FILE_NAME "${FW_MODEL}--${FW_VERSION}-${FW_TYPE}-${CMAKE_BUILD_TYPE}")
+set(OUTPUT_FILE_NAME "${FW_MODEL}--${FW_VERSION}-${CMAKE_BUILD_TYPE}")
 
 # Set the output filename for the executable target (.elf)
 set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES 
