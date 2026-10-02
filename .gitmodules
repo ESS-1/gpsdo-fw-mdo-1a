@@ -7,3 +7,6 @@
 [submodule "lib/si5351"]
 	path = lib/si5351
 	url = https://github.com/ESS-1/stm32-si5351.git
+[submodule "lib/mdo-1a-config"]
+	path = lib/mdo-1a-config
+	url = https://github.com/ESS-1/gpsdo-fw-mdo-config.git
