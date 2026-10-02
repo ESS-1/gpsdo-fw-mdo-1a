@@ -88,7 +88,6 @@ math(EXPR APP_BASE_ADDR     "0x08000000 + ${BOOT_OFFSET_BYTES}" OUTPUT_FORMAT HE
 target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
     # Pass the model, FW version, and FW type to compiler
     BUILD_FW_VERSION="${FW_VERSION}"
-    BUILD_FW_TYPE="${FW_TYPE}"
     BUILD_FW_MODEL="${FW_MODEL}"
     BUILD_FW_HWID="${FW_HWID}"
     # Relocate the Vector Table Offset for bootloader compatibility
