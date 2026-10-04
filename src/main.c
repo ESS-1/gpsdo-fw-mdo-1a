@@ -11,12 +11,14 @@
 #include "tim.h"
 #include "pll.h"
 #include "bootlog.h"
+#include "st7735.h"
+#include "st7735_config.h"
+#include "boot_data_defs.h"
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "st7735.h"
 
 // All times in ms
 #define PPS_PULSE_WIDTH         100
@@ -37,13 +39,21 @@ void init_ext_clock()
 
     // Initialize LCD
     ST7735_Init();
+    ST7735_FillScreenFast(ST7735_BLACK);
+
+    // Show boot logo
+    volatile const boot_logo_t* logo = &(G_BOOT_DATA->boot_logo);
+    ST7735_DrawCompressedImage((ST7735_WIDTH - logo->width) / 2, (ST7735_HEIGHT - logo->height) / 2,
+        logo->width, logo->height, logo->format, logo->image, logo->image_length);
+    ST7735_EnableDisplay(true);
+
+    // Wait for OCXO startup
+    HAL_Delay(750);
+
     bootlog_init();
     bootlog_add(BUILD_FW_MODEL "   ver. " BUILD_FW_VERSION);
     bootlog_add("Initializing...");
     bootlog_add("Enable OCXO");
-
-    // Wait for OCXO startup
-    HAL_Delay(500);
 
     // Init SI5351 PLL
     bool pll_fail = false;
