@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "st7735.h"
 
 // All times in ms
 #define PPS_PULSE_WIDTH         100
@@ -34,6 +35,8 @@ void init_ext_clock()
     MX_I2C1_Init();
     MX_SPI1_Init();
 
+    // Initialize LCD
+    ST7735_Init();
     bootlog_init();
     bootlog_add(BUILD_FW_MODEL "   ver. " BUILD_FW_VERSION);
     bootlog_add("Initializing...");

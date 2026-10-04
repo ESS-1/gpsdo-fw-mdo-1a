@@ -14,7 +14,6 @@ void bootlog_write(int32_t x, int32_t y, uint16_t color, const char* msg)
 
 void bootlog_init()
 {
-    ST7735_Init();
     ST7735_FillScreenFast(BOOTLOG_BG_COLOR);
 }
 

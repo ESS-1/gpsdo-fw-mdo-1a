@@ -34,3 +34,8 @@ target_link_libraries(st7735 INTERFACE stm32cubemx)
 target_link_libraries(si5351 INTERFACE stm32cubemx)
 
 add_subdirectory(stm32)
+
+# Add MDO-1A configuration include directories
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
+    mdo-1a-config/include
+)

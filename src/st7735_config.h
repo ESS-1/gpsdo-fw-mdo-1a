@@ -1,6 +1,8 @@
 #ifndef __ST7735_H_CONFIG__
 #define __ST7735_H_CONFIG__
 
+#include "boot_data_defs.h"
+
 #define ST7735_SPI_PORT hspi1
 extern SPI_HandleTypeDef ST7735_SPI_PORT;
 
@@ -10,6 +12,8 @@ extern SPI_HandleTypeDef ST7735_SPI_PORT;
 #define ST7735_CS_GPIO_Port  LCD_CS_GPIO_Port
 #define ST7735_DC_Pin        LCD_DC_Pin
 #define ST7735_DC_GPIO_Port  LCD_DC_GPIO_Port
+
+#define ST7735_INIT_CMDS     (G_BOOT_DATA->display_init_commands.commands)
 
 // 160x80 with ST7735S (no color inversion), rotate left
 #define ST7735_XSTART   0

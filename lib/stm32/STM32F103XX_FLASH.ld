@@ -55,13 +55,13 @@ ENTRY(Reset_Handler)
 /* Specify the memory areas */
 MEMORY
 {
-RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 20K
-/* Application Flash region placed right after the bootloader reserved space */
-FLASH (rx)     : ORIGIN = 0x08000000 + __BOOT_SIZE__, LENGTH = __TOTAL_FLASH__ - __BOOT_SIZE__ - __METADATA_SIZE__ - __EEPROM_SIZE__
-/* HW ID and CRC */
-METADATA (r)   : ORIGIN = 0x08000000 + (__TOTAL_FLASH__ - __EEPROM_SIZE__ - __METADATA_SIZE__), LENGTH = __METADATA_SIZE__
-/* Emulated EEPROM located at the very end of the Flash memory */
-EEPROM (r)     : ORIGIN = 0x08000000 + __TOTAL_FLASH__ - __EEPROM_SIZE__, LENGTH = __EEPROM_SIZE__
+  RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 20K
+  /* Application Flash region placed right after the bootloader reserved space */
+  FLASH (rx)     : ORIGIN = 0x08000000 + __BOOTLOADER_SIZE__, LENGTH = __TOTAL_FLASH_SIZE__ - __BOOTLOADER_SIZE__ - __APP_METADATA_SIZE__ - __EEPROM_SIZE__
+  /* HW ID and CRC */
+  METADATA (r)   : ORIGIN = 0x08000000 + (__TOTAL_FLASH_SIZE__ - __EEPROM_SIZE__ - __APP_METADATA_SIZE__), LENGTH = __APP_METADATA_SIZE__
+  /* Emulated EEPROM located at the very end of the Flash memory */
+  EEPROM (r)     : ORIGIN = 0x08000000 + __TOTAL_FLASH_SIZE__ - __EEPROM_SIZE__, LENGTH = __EEPROM_SIZE__
 }
 
 /* Highest address of the user mode stack */
@@ -264,7 +264,7 @@ SECTIONS
     LONG(0x00000000);
   } > METADATA
 
-  ASSERT(SIZEOF(.app_metadata) + SIZEOF(.crc32) == __METADATA_SIZE__,
+  ASSERT(SIZEOF(.app_metadata) + SIZEOF(.crc32) == __APP_METADATA_SIZE__,
          "Error: Invalid .app_metadata size. Please verify that the metadata structure is defined and its size matches the allocated region.")
 
   .eeprom_section (NOLOAD) :

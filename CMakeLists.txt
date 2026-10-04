@@ -58,6 +58,9 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
     si5351
 )
 
+# Include MDO-1A configuration constants
+include("${CMAKE_CURRENT_SOURCE_DIR}/lib/mdo-1a-config/mdo.config.cmake")
+
 # Include firmware version and type definition file
 include("${CMAKE_CURRENT_SOURCE_DIR}/version.cmake")
 
@@ -69,38 +72,34 @@ set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES
     OUTPUT_NAME "${OUTPUT_FILE_NAME}"
 )
 
-
-# ==============================================================================
-# Flash Memory Layout Configuration
-# ==============================================================================
-# Sizes defined in KB
-set(TOTAL_FLASH_KB      128)        # Total Flash memory
-set(BOOTLOADER_KB       14)         # Reserved bootloader space
-set(EEPROM_KB           1)          # Reserved space for EEPROM emulation
-set(METADATA_BYTES      24)         # Reserved space for metadata (HW ID, CRC)
-
-
-# Convert to byte offsets and addresses
-math(EXPR BOOT_OFFSET_BYTES "${BOOTLOADER_KB} * 1024")
-math(EXPR BOOT_OFFSET_HEX   "${BOOT_OFFSET_BYTES}" OUTPUT_FORMAT HEXADECIMAL)
-math(EXPR APP_BASE_ADDR     "0x08000000 + ${BOOT_OFFSET_BYTES}" OUTPUT_FORMAT HEXADECIMAL)
+# Set the base address for the application firmware after the bootloader
+math(EXPR APP_BASE_ADDR "0x08000000 + ${BOOTLOADER_SIZE}" OUTPUT_FORMAT HEXADECIMAL)
 
 target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
     # Pass the model, FW version, and FW type to compiler
     BUILD_FW_VERSION="${FW_VERSION}"
     BUILD_FW_MODEL="${FW_MODEL}"
-    BUILD_FW_HWID="${FW_HWID}"
+    BUILD_BOARD_HWID="${BOARD_HWID}"
     # Relocate the Vector Table Offset for bootloader compatibility
     USER_VECT_TAB_ADDRESS
-    VECT_TAB_OFFSET=${BOOT_OFFSET_HEX}U
+    VECT_TAB_OFFSET=${BOOTLOADER_SIZE}U
+)
+
+# Pass memory layout symbols to C/C++
+target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
+    TOTAL_FLASH_SIZE=${TOTAL_FLASH_SIZE}U
+    BOOTLOADER_SIZE=${BOOTLOADER_SIZE}U
+    BOOTLOADER_DATA_SIZE=${BOOTLOADER_DATA_SIZE}U
+    EEPROM_SIZE=${EEPROM_SIZE}U
+    APP_METADATA_SIZE=${APP_METADATA_SIZE}U
 )
 
 # Pass memory layout symbols to LD
 target_link_options(${CMAKE_PROJECT_NAME} PRIVATE
-    -Wl,--defsym=__TOTAL_FLASH__=${TOTAL_FLASH_KB}K
-    -Wl,--defsym=__BOOT_SIZE__=${BOOTLOADER_KB}K
-    -Wl,--defsym=__EEPROM_SIZE__=${EEPROM_KB}K
-    -Wl,--defsym=__METADATA_SIZE__=${METADATA_BYTES}
+    -Wl,--defsym=__TOTAL_FLASH_SIZE__=${TOTAL_FLASH_SIZE}
+    -Wl,--defsym=__BOOTLOADER_SIZE__=${BOOTLOADER_SIZE}
+    -Wl,--defsym=__EEPROM_SIZE__=${EEPROM_SIZE}
+    -Wl,--defsym=__APP_METADATA_SIZE__=${APP_METADATA_SIZE}
 )
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
@@ -130,7 +129,7 @@ add_custom_command(
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/uf2/uf2conv.py
             ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_FILE_NAME}.bin
             -b ${APP_BASE_ADDR}
-            -f ${UF2_FAMILY_ID}
+            -f ${UF2_FAMILY}
             -o ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_FILE_NAME}.uf2
             --convert
     COMMENT "Generating UF2 file: ${OUTPUT_FILE_NAME}.uf2"
