@@ -3,7 +3,7 @@
 #include "st7735.h"
 #include <stdint.h>
 
-#define BOOTLOG_BG_COLOR (ST7735_COLOR565(28, 28, 28))
+#define BOOTLOG_BG_COLOR (ST7735_COLOR565(50, 50, 50))
 
 static int32_t bootlog_current_line = 0;
 
