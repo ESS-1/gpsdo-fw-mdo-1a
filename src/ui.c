@@ -80,7 +80,6 @@ static void ui_menu_draw_right_aligned(const UIElement* element, int offset_char
 static void ui_proc_icon_navigation_btn(const UIElement* element, UICommand command, int32_t encoder_step,
     uint16_t icon_width, uint16_t icon_height, const uint16_t* icon, UIScreen* target_screen);
 static void ui_proc_back_to_main(const UIElement* element, UICommand command, int32_t encoder_step);
-static void ui_proc_back_to_main_menu_p2(const UIElement* element, UICommand command, int32_t encoder_step);
 static void ui_proc_menu_label(const UIElement* element, UICommand command, int32_t encoder_step, const char* label);
 static void ui_proc_menu_label_page_1of2(const UIElement* element, UICommand command, int32_t encoder_step);
 static void ui_proc_menu_label_page_2of2(const UIElement* element, UICommand command, int32_t encoder_step);
@@ -175,34 +174,38 @@ UIScreen ui_main_screen = {
 // Header
 static void ui_proc_menu_main_label(const UIElement* element, UICommand command, int32_t encoder_step);
 static void ui_proc_menu_main_to_page1(const UIElement* element, UICommand command, int32_t encoder_step);
-static void ui_proc_menu_main_to_page2(const UIElement* element, UICommand command, int32_t encoder_step);
+static void ui_proc_menu_main_to_page2_right(const UIElement* element, UICommand command, int32_t encoder_step);
+static void ui_proc_menu_main_to_page2_left(const UIElement* element, UICommand command, int32_t encoder_step);
+static void ui_proc_menu_main_to_page3(const UIElement* element, UICommand command, int32_t encoder_step);
 // Page 1
 static void ui_proc_menu_main_brightness(const UIElement* element, UICommand command, int32_t encoder_step);
 static void ui_proc_menu_main_uptime(const UIElement* element, UICommand command, int32_t encoder_step);
-static void ui_proc_menu_main_model(const UIElement* element, UICommand command, int32_t encoder_step);
-static void ui_proc_menu_main_sn(const UIElement* element, UICommand command, int32_t encoder_step);
-static void ui_proc_menu_main_version(const UIElement* element, UICommand command, int32_t encoder_step);
+static void ui_proc_menu_main_lcd_adjust_vcom(const UIElement* element, UICommand command, int32_t encoder_step);
+static void ui_proc_menu_main_lcd_gamma_test(const UIElement* element, UICommand command, int32_t encoder_step);
 // Page 2
-static void ui_proc_menu_main_mcu_flash(const UIElement* element, UICommand command, int32_t encoder_step);
-static void ui_proc_menu_main_eeprom_writes(const UIElement* element, UICommand command, int32_t encoder_step);
 static void ui_proc_menu_main_all_settings(const UIElement* element, UICommand command, int32_t encoder_step);
 static void ui_proc_menu_main_restore_defaults(const UIElement* element, UICommand command, int32_t encoder_step);
 static void ui_proc_menu_main_debug(const UIElement* element, UICommand command, int32_t encoder_step);
+// Page 3
+static void ui_proc_menu_main_model(const UIElement* element, UICommand command, int32_t encoder_step);
+static void ui_proc_menu_main_sn(const UIElement* element, UICommand command, int32_t encoder_step);
+static void ui_proc_menu_main_version(const UIElement* element, UICommand command, int32_t encoder_step);
+static void ui_proc_menu_main_mcu_flash(const UIElement* element, UICommand command, int32_t encoder_step);
+static void ui_proc_menu_main_eeprom_writes(const UIElement* element, UICommand command, int32_t encoder_step);
 
 // Page 1
 static const UIElement ui_menu_screen_elements_page1[] = {
     // Header
-    { 1,   1, 15, 16, UI_STYLE_FOCUSABLE, ui_proc_back_to_main            },
-    { 27,  6, 28, 10, UI_STYLE_NONE,      ui_proc_menu_main_label         },
-    { 116, 2, 10, 15, UI_STYLE_FOCUSABLE, ui_proc_menu_page_left_inactive },
-    { 127, 6, 21, 10, UI_STYLE_NONE,      ui_proc_menu_label_page_1of2    },
-    { 149, 2, 10, 15, UI_STYLE_FOCUSABLE, ui_proc_menu_main_to_page2      },
+    { 1,   1, 15, 16, UI_STYLE_FOCUSABLE, ui_proc_back_to_main             },
+    { 27,  6, 28, 10, UI_STYLE_NONE,      ui_proc_menu_main_label          },
+    { 116, 2, 10, 15, UI_STYLE_FOCUSABLE, ui_proc_menu_page_left_inactive  },
+    { 127, 6, 21, 10, UI_STYLE_NONE,      ui_proc_menu_label_page_1of3     },
+    { 149, 2, 10, 15, UI_STYLE_FOCUSABLE, ui_proc_menu_main_to_page2_right },
     // Content
-    { 1, 20, 154, 11, UI_STYLE_FOCUSABLE | UI_STYLE_INPUT_CAPTURING, ui_proc_menu_main_brightness },
-    { 1, 32, 154, 11, UI_STYLE_NONE,                                 ui_proc_menu_main_uptime     },
-    { 1, 44, 154, 11, UI_STYLE_NONE,                                 ui_proc_menu_main_model      },
-    { 1, 56, 154, 11, UI_STYLE_NONE,                                 ui_proc_menu_main_sn         },
-    { 1, 68, 154, 11, UI_STYLE_NONE,                                 ui_proc_menu_main_version    },
+    { 1, 20, 154, 11, UI_STYLE_FOCUSABLE | UI_STYLE_INPUT_CAPTURING, ui_proc_menu_main_brightness      },
+    { 1, 32, 154, 11, UI_STYLE_NONE,                                 ui_proc_menu_main_uptime          },
+    { 1, 56, 154, 11, UI_STYLE_FOCUSABLE,                            ui_proc_menu_main_lcd_adjust_vcom },
+    { 1, 68, 154, 11, UI_STYLE_FOCUSABLE,                            ui_proc_menu_main_lcd_gamma_test  },
 };
 
 static UIScreen ui_menu_screen_page1 = {
@@ -215,23 +218,44 @@ static UIScreen ui_menu_screen_page1 = {
 // Page 2
 static const UIElement ui_menu_screen_elements_page2[] = {
     // Header
-    { 1,   1, 15, 16, UI_STYLE_FOCUSABLE,  ui_proc_back_to_main             },
-    { 27,  6, 28, 10, UI_STYLE_NONE,       ui_proc_menu_main_label          },
-    { 116, 2, 10, 15, UI_STYLE_FOCUSABLE,  ui_proc_menu_main_to_page1       },
-    { 127, 6, 21, 10, UI_STYLE_NONE,       ui_proc_menu_label_page_2of2     },
-    { 149, 2, 10, 15, UI_STYLE_FOCUSABLE,  ui_proc_menu_page_right_inactive },
+    { 1,   1, 15, 16, UI_STYLE_FOCUSABLE,  ui_proc_back_to_main         },
+    { 27,  6, 28, 10, UI_STYLE_NONE,       ui_proc_menu_main_label      },
+    { 116, 2, 10, 15, UI_STYLE_FOCUSABLE,  ui_proc_menu_main_to_page1   },
+    { 127, 6, 21, 10, UI_STYLE_NONE,       ui_proc_menu_label_page_2of3 },
+    { 149, 2, 10, 15, UI_STYLE_FOCUSABLE,  ui_proc_menu_main_to_page3   },
     // Content
-    { 1, 20, 154, 11, UI_STYLE_NONE,      ui_proc_menu_main_mcu_flash        },
-    { 1, 32, 154, 11, UI_STYLE_NONE,      ui_proc_menu_main_eeprom_writes    },
-    { 1, 44, 154, 11, UI_STYLE_FOCUSABLE, ui_proc_menu_main_all_settings     },
-    { 1, 56, 154, 11, UI_STYLE_FOCUSABLE, ui_proc_menu_main_restore_defaults },
-    { 1, 68, 154, 11, UI_STYLE_FOCUSABLE, ui_proc_menu_main_debug            },
+    { 1, 20, 154, 11, UI_STYLE_FOCUSABLE, ui_proc_menu_main_all_settings     },
+    { 1, 32, 154, 11, UI_STYLE_FOCUSABLE, ui_proc_menu_main_restore_defaults },
+    { 1, 44, 154, 11, UI_STYLE_FOCUSABLE, ui_proc_menu_main_debug            },
 };
 
 static UIScreen ui_menu_screen_page2 = {
     ui_menu_screen_elements_page2,
-    &(ui_menu_screen_elements_page2[2]),
+    &(ui_menu_screen_elements_page2[4]),
     ARRAY_SIZE(ui_menu_screen_elements_page2),
+    false,
+};
+
+// Page 3
+static const UIElement ui_menu_screen_elements_page3[] = {
+    // Header
+    { 1,   1, 15, 16, UI_STYLE_FOCUSABLE,  ui_proc_back_to_main             },
+    { 27,  6, 28, 10, UI_STYLE_NONE,       ui_proc_menu_main_label          },
+    { 116, 2, 10, 15, UI_STYLE_FOCUSABLE,  ui_proc_menu_main_to_page2_left  },
+    { 127, 6, 21, 10, UI_STYLE_NONE,       ui_proc_menu_label_page_3of3     },
+    { 149, 2, 10, 15, UI_STYLE_FOCUSABLE,  ui_proc_menu_page_right_inactive },
+    // Content
+    { 1, 20, 154, 11, UI_STYLE_NONE,       ui_proc_menu_main_model          },
+    { 1, 32, 154, 11, UI_STYLE_NONE,       ui_proc_menu_main_sn             },
+    { 1, 44, 154, 11, UI_STYLE_NONE,       ui_proc_menu_main_version        },
+    { 1, 56, 154, 11, UI_STYLE_NONE,       ui_proc_menu_main_mcu_flash      },
+    { 1, 68, 154, 11, UI_STYLE_NONE,       ui_proc_menu_main_eeprom_writes  },
+};
+
+static UIScreen ui_menu_screen_page3 = {
+    ui_menu_screen_elements_page3,
+    &(ui_menu_screen_elements_page3[2]),
+    ARRAY_SIZE(ui_menu_screen_elements_page3),
     false,
 };
 
@@ -249,6 +273,40 @@ UIScreen ui_world_map_screen = {
     ui_world_map_screen_elements,
     NULL,
     ARRAY_SIZE(ui_world_map_screen_elements),
+    false,
+};
+
+
+//------------------------------------------------------------------------------
+// LCD VCOM Adjustment Screen Layout
+//------------------------------------------------------------------------------
+static void ui_proc_lcd_adjust_vcom(const UIElement* element, UICommand command, int32_t encoder_step);
+
+static const UIElement ui_lcd_adjust_vcom_screen_elements[] = {
+    { 0, 0, 160, 80, UI_STYLE_FOCUSABLE | UI_STYLE_NOFRAME, ui_proc_lcd_adjust_vcom },
+};
+
+UIScreen ui_lcd_adjust_vcom_screen = {
+    ui_lcd_adjust_vcom_screen_elements,
+    NULL,
+    ARRAY_SIZE(ui_lcd_adjust_vcom_screen_elements),
+    false,
+};
+
+
+//------------------------------------------------------------------------------
+// LCD Gamma Test Screen Layout
+//------------------------------------------------------------------------------
+static void ui_proc_lcd_gamma_test(const UIElement* element, UICommand command, int32_t encoder_step);
+
+static const UIElement ui_lcd_gamma_test_screen_elements[] = {
+    { 0, 0, 160, 80, UI_STYLE_FOCUSABLE | UI_STYLE_NOFRAME, ui_proc_lcd_gamma_test },
+};
+
+UIScreen ui_lcd_gamma_test_screen = {
+    ui_lcd_gamma_test_screen_elements,
+    NULL,
+    ARRAY_SIZE(ui_lcd_gamma_test_screen_elements),
     false,
 };
 
@@ -490,7 +548,7 @@ static void ui_proc_menu_all_settings_to_page3(const UIElement* element, UIComma
 // Page 1
 static const UIElement ui_all_settings_screen_elements_page1[] = {
     // Header
-    { 1,   1, 15, 16, UI_STYLE_FOCUSABLE, ui_proc_back_to_main_menu_p2             },
+    { 1,   1, 15, 16, UI_STYLE_FOCUSABLE, ui_proc_back_to_main                     },
     { 27,  6, 56, 10, UI_STYLE_NONE,      ui_proc_menu_all_settings_label          },
     { 116, 2, 10, 15, UI_STYLE_FOCUSABLE, ui_proc_menu_page_left_inactive          },
     { 127, 6, 21, 10, UI_STYLE_NONE,      ui_proc_menu_label_page_1of3             },
@@ -513,7 +571,7 @@ static UIScreen ui_all_settings_screen_page1 = {
 // Page 2
 static const UIElement ui_all_settings_screen_elements_page2[] = {
     // Header
-    { 1,   1, 15, 16, UI_STYLE_FOCUSABLE, ui_proc_back_to_main_menu_p2       },
+    { 1,   1, 15, 16, UI_STYLE_FOCUSABLE, ui_proc_back_to_main               },
     { 27,  6, 56, 10, UI_STYLE_NONE,      ui_proc_menu_all_settings_label    },
     { 116, 2, 10, 15, UI_STYLE_FOCUSABLE, ui_proc_menu_all_settings_to_page1 },
     { 127, 6, 21, 10, UI_STYLE_NONE,      ui_proc_menu_label_page_2of3       },
@@ -536,7 +594,7 @@ static UIScreen ui_all_settings_screen_page2 = {
 // Page 3
 static const UIElement ui_all_settings_screen_elements_page3[] = {
     // Header
-    { 1,   1, 15, 16, UI_STYLE_FOCUSABLE, ui_proc_back_to_main_menu_p2            },
+    { 1,   1, 15, 16, UI_STYLE_FOCUSABLE, ui_proc_back_to_main                    },
     { 27,  6, 56, 10, UI_STYLE_NONE,      ui_proc_menu_all_settings_label         },
     { 116, 2, 10, 15, UI_STYLE_FOCUSABLE, ui_proc_menu_all_settings_to_page2_left },
     { 127, 6, 21, 10, UI_STYLE_NONE,      ui_proc_menu_label_page_3of3            },
@@ -574,7 +632,7 @@ static void ui_proc_debug_pwm_edt_1000(const UIElement* element, UICommand comma
 
 static const UIElement ui_debug_screen_elements[] = {
     // Header
-    { 1,   1,  15,  16, UI_STYLE_FOCUSABLE,                            ui_proc_back_to_main_menu_p2 },
+    { 1,   1,  15,  16, UI_STYLE_FOCUSABLE,                            ui_proc_back_to_main         },
     { 27,  6,  35,  10, UI_STYLE_NONE,                                 ui_proc_menu_debug_label     },
     // Content
     { 1,   20, 154, 11, UI_STYLE_FOCUSABLE,                            ui_proc_debug_perf_timer     },
@@ -631,11 +689,6 @@ static void ui_proc_icon_navigation_btn(const UIElement* element, UICommand comm
 static void ui_proc_back_to_main(const UIElement* element, UICommand command, int32_t encoder_step)
 {
     ui_proc_icon_navigation_btn(element, command, encoder_step, 15, 16, icon_back_15x16, &ui_main_screen);
-}
-
-static void ui_proc_back_to_main_menu_p2(const UIElement* element, UICommand command, int32_t encoder_step)
-{
-    ui_proc_icon_navigation_btn(element, command, encoder_step, 15, 16, icon_back_15x16, &ui_menu_screen_page2);
 }
 
 static void ui_proc_menu_label(const UIElement* element, UICommand command, int32_t encoder_step, const char* label)
@@ -2102,9 +2155,19 @@ static void ui_proc_menu_main_to_page1(const UIElement* element, UICommand comma
     ui_proc_menu_page_left(element, command, encoder_step, &ui_menu_screen_page1);
 }
 
-static void ui_proc_menu_main_to_page2(const UIElement* element, UICommand command, int32_t encoder_step)
+static void ui_proc_menu_main_to_page2_right(const UIElement* element, UICommand command, int32_t encoder_step)
 {
     ui_proc_menu_page_right(element, command, encoder_step, &ui_menu_screen_page2);
+}
+
+static void ui_proc_menu_main_to_page2_left(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    ui_proc_menu_page_left(element, command, encoder_step, &ui_menu_screen_page2);
+}
+
+static void ui_proc_menu_main_to_page3(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    ui_proc_menu_page_right(element, command, encoder_step, &ui_menu_screen_page3);
 }
 
 static void ui_proc_menu_main_brightness(const UIElement* element, UICommand command, int32_t encoder_step)
@@ -2163,52 +2226,14 @@ static void ui_proc_menu_main_uptime(const UIElement* element, UICommand command
     ui_proc_menu_readonly_u32(element, command, encoder_step, "Uptime:", &ui_cache_device_uptime, device_uptime, 10, "%10" PRIu32 " s");
 }
 
-static void ui_proc_menu_main_model(const UIElement* element, UICommand command, int32_t encoder_step)
+static void ui_proc_menu_main_lcd_adjust_vcom(const UIElement* element, UICommand command, int32_t encoder_step)
 {
-    ui_proc_menu_readonly_entry(element, command, encoder_step, "Model:", 16, BUILD_FW_MODEL);
+    ui_proc_menu_link(element, command, encoder_step, "> Adjust LCD VCOM...", &ui_lcd_adjust_vcom_screen);
 }
 
-static void ui_proc_menu_main_sn(const UIElement* element, UICommand command, int32_t encoder_step)
+static void ui_proc_menu_main_lcd_gamma_test(const UIElement* element, UICommand command, int32_t encoder_step)
 {
-    // Draw label
-    ui_static_label(element, command, "S/N:", UI_COLOR_MENU_LABEL);
-
-    if (command & UICommand_Init) {
-        // Draw value
-        uint32_t uid_w0 = *(volatile uint32_t*)UID_BASE;
-        uint32_t uid_w1 = *(volatile uint32_t*)(UID_BASE + 4);
-        char     s[17]  = { '\0' };
-        snprintf(s, ARRAY_SIZE(s), "%08" PRIX32 "%08" PRIX32, uid_w0, uid_w1);
-        ST7735_WriteStringNoWrap(element->x + 6 * 7, element->y + 1, element->height - 1, s, Font_7x10, UI_COLOR_MENU_LABEL, UI_COLOR_BG);
-    }
-
-    ui_default_element_proc(element, command, encoder_step);
-}
-
-static void ui_proc_menu_main_version(const UIElement* element, UICommand command, int32_t encoder_step)
-{
-    ui_proc_menu_readonly_entry(element, command, encoder_step, "Version:", 16, BUILD_FW_VERSION);
-}
-
-static void ui_proc_menu_main_mcu_flash(const UIElement* element, UICommand command, int32_t encoder_step)
-{
-    // Draw label
-    ui_static_label(element, command, "MCU FLASH:", UI_COLOR_MENU_LABEL);
-
-    if (command & UICommand_Init) {
-        // Draw value
-        char s[8] = { '\0' };
-        snprintf(s, ARRAY_SIZE(s), "%5" PRIu16 "KB", *(uint16_t*)FLASHSIZE_BASE);
-        ST7735_WriteStringNoWrap(element->x + 15 * 7, element->y + 1, element->height - 1, s, Font_7x10, UI_COLOR_MENU_LABEL, UI_COLOR_BG);
-    }
-
-    ui_default_element_proc(element, command, encoder_step);
-}
-
-static void ui_proc_menu_main_eeprom_writes(const UIElement* element, UICommand command, int32_t encoder_step)
-{
-    static uint32_t ui_cache_total_writes = 0;
-    ui_proc_menu_readonly_u32(element, command, encoder_step, "EEPROM Writes:", &ui_cache_total_writes, ee_storage.total_writes, 14, "%8" PRIu32);
+    ui_proc_menu_link(element, command, encoder_step, "> LCD Gamma Test", &ui_lcd_gamma_test_screen);
 }
 
 static void ui_proc_menu_main_all_settings(const UIElement* element, UICommand command, int32_t encoder_step)
@@ -2252,6 +2277,54 @@ static void ui_proc_menu_main_restore_defaults(const UIElement* element, UIComma
 static void ui_proc_menu_main_debug(const UIElement* element, UICommand command, int32_t encoder_step)
 {
     ui_proc_menu_link(element, command, encoder_step, "> Debug...", &ui_debug_screen);
+}
+
+static void ui_proc_menu_main_model(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    ui_proc_menu_readonly_entry(element, command, encoder_step, "Model:", 16, BUILD_FW_MODEL);
+}
+
+static void ui_proc_menu_main_sn(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    // Draw label
+    ui_static_label(element, command, "S/N:", UI_COLOR_MENU_LABEL);
+
+    if (command & UICommand_Init) {
+        // Draw value
+        uint32_t uid_w0 = *(volatile uint32_t*)UID_BASE;
+        uint32_t uid_w1 = *(volatile uint32_t*)(UID_BASE + 4);
+        char     s[17]  = { '\0' };
+        snprintf(s, ARRAY_SIZE(s), "%08" PRIX32 "%08" PRIX32, uid_w0, uid_w1);
+        ST7735_WriteStringNoWrap(element->x + 6 * 7, element->y + 1, element->height - 1, s, Font_7x10, UI_COLOR_MENU_LABEL, UI_COLOR_BG);
+    }
+
+    ui_default_element_proc(element, command, encoder_step);
+}
+
+static void ui_proc_menu_main_version(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    ui_proc_menu_readonly_entry(element, command, encoder_step, "FW Version:", 16, BUILD_FW_VERSION);
+}
+
+static void ui_proc_menu_main_mcu_flash(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    // Draw label
+    ui_static_label(element, command, "MCU FLASH:", UI_COLOR_MENU_LABEL);
+
+    if (command & UICommand_Init) {
+        // Draw value
+        char s[8] = { '\0' };
+        snprintf(s, ARRAY_SIZE(s), "%5" PRIu16 "KB", *(uint16_t*)FLASHSIZE_BASE);
+        ST7735_WriteStringNoWrap(element->x + 15 * 7, element->y + 1, element->height - 1, s, Font_7x10, UI_COLOR_MENU_LABEL, UI_COLOR_BG);
+    }
+
+    ui_default_element_proc(element, command, encoder_step);
+}
+
+static void ui_proc_menu_main_eeprom_writes(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    static uint32_t ui_cache_total_writes = 0;
+    ui_proc_menu_readonly_u32(element, command, encoder_step, "EEPROM Writes:", &ui_cache_total_writes, ee_storage.total_writes, 14, "%8" PRIu32);
 }
 
 
@@ -2331,8 +2404,28 @@ static void ui_proc_world_map(const UIElement* element, UICommand command, int32
     }
 
     if (command & UICommand_Click) {
-        ui_show_screen(&ui_gps_screen_page2);
+        ui_show_screen(&ui_main_screen);
     }
+
+    ui_default_element_proc(element, command, encoder_step);
+}
+
+
+//------------------------------------------------------------------------------
+// LCD VCOM Adjustment
+//------------------------------------------------------------------------------
+static void ui_proc_lcd_adjust_vcom(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+
+    ui_default_element_proc(element, command, encoder_step);
+}
+
+
+//------------------------------------------------------------------------------
+// LCD Gamma Test
+//------------------------------------------------------------------------------
+static void ui_proc_lcd_gamma_test(const UIElement* element, UICommand command, int32_t encoder_step)
+{
 
     ui_default_element_proc(element, command, encoder_step);
 }
