@@ -55,6 +55,9 @@ void MX_SPI1_Init(void)
   }
   /* USER CODE BEGIN SPI1_Init 2 */
 
+  // Force-enable SPI to actively drive SCK/MOSI low and prevent High-Z noise glitches while idle
+  __HAL_SPI_ENABLE(&hspi1);
+
   /* USER CODE END SPI1_Init 2 */
 
 }
