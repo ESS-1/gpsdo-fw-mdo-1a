@@ -13,7 +13,7 @@ extern SPI_HandleTypeDef ST7735_SPI_PORT;
 #define ST7735_DC_Pin        LCD_DC_Pin
 #define ST7735_DC_GPIO_Port  LCD_DC_GPIO_Port
 
-#define ST7735_INIT_CMDS     (G_BOOT_DATA->display_init_commands.commands)
+#define ST7735_INIT_CMDS     (G_BOOT_DATA->display_config.init_commands)
 
 // 160x80 with ST7735S (no color inversion), rotate left
 #define ST7735_XSTART   0

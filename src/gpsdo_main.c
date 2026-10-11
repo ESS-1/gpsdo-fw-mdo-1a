@@ -1,3 +1,4 @@
+#include "gpsdo_main.h"
 #include "main.h"
 #include "gpio.h"
 #include "i2c.h"
@@ -15,7 +16,6 @@
 #include "st7735_config.h"
 #include "boot_data_defs.h"
 #include <math.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -106,6 +106,12 @@ static void enable_usb()
     gpio_init.Pull             = GPIO_NOPULL;
     gpio_init.Speed            = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(USB_DP_PULLUP_GPIO_Port, &gpio_init);
+}
+
+void set_lcd_vcom(uint16_t vcom)
+{
+    uint8_t data = (uint8_t)vcom;
+    ST7735_ExecuteCommand(ST7735_VMCTR1, &data, 1);
 }
 
 void load_settings(bool restore_defaults, bool apply_settings)
@@ -237,9 +243,17 @@ void load_settings(bool restore_defaults, bool apply_settings)
         ee_is_changed                      = true;
     }
 
+    // LCD VCOM
+    if (restore_defaults || ee_storage.lcd_vcom < G_BOOT_DATA->display_config.vcom_min
+                         || ee_storage.lcd_vcom > G_BOOT_DATA->display_config.vcom_max) {
+        ee_storage.lcd_vcom = G_BOOT_DATA->display_config.vcom_default;
+        ee_is_changed       = true;
+    }
+
 
     if (apply_settings) {
         // Apply settings
+        set_lcd_vcom(ee_storage.lcd_vcom);
         TIM1->CCR2 = ee_storage.pwm;
         set_brightness(ee_storage.brightness);
         gps_time_offset = ee_storage.gps_time_offset+GPS_MIN_TIME_OFFSET;

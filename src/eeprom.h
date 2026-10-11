@@ -29,6 +29,7 @@ typedef struct
     volatile uint8_t  correction_algorithm;
     volatile uint32_t correction_factor;
     uint32_t warmup_time_seconds;
+    uint16_t lcd_vcom;
 } ee_storage_t;
 
 extern ee_storage_t ee_storage;

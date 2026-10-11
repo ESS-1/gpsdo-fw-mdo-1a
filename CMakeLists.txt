@@ -33,7 +33,7 @@ add_subdirectory(lib)
 # Add sources to executable
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     src/app_metadata.c
-    src/main.c
+    src/gpsdo_main.c
     src/eeprom.c
     src/frequency.c
     src/gps.c
