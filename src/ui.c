@@ -677,14 +677,21 @@ static inline void ui_draw_static_label(const UIElement* element, UICommand comm
 
 static void ui_menu_draw_right_aligned(const UIElement* element, uint32_t offset_chars, const char* str, uint16_t text_color)
 {
-    size_t len = strlen(str);
-    if (len > UI_MENU_STR_LEN - offset_chars) {
-        len = UI_MENU_STR_LEN - offset_chars;
+    if (offset_chars >= UI_MENU_STR_LEN) {
+        return;
     }
 
-    if (len < (UI_MENU_STR_LEN - offset_chars)) {
-        ST7735_FillRectangleFast(element->x + offset_chars * 7, element->y + 1, (UI_MENU_STR_LEN - offset_chars - len) * 7, element->height - 1, UI_COLOR_BG);
+    const uint32_t max_len = UI_MENU_STR_LEN - offset_chars;
+    size_t         len     = strlen(str);
+
+    if (len > max_len) {
+        len = max_len;
     }
+
+    if (len < max_len) {
+        ST7735_FillRectangleFast(element->x + offset_chars * 7, element->y + 1, (max_len - len) * 7, element->height - 1, UI_COLOR_BG);
+    }
+
     ST7735_WriteStringNoWrap(element->x + (UI_MENU_STR_LEN - len) * 7, element->y + 1, element->height - 1, str, Font_7x10, text_color, UI_COLOR_BG);
 }
 
