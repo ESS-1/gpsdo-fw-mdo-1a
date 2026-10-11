@@ -65,7 +65,7 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/lib/mdo-1a-config/mdo.config.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/version.cmake")
 
 # Construct output filename
-set(OUTPUT_FILE_NAME "${FW_MODEL}--${FW_VERSION}-${CMAKE_BUILD_TYPE}")
+set(OUTPUT_FILE_NAME "${BOARD_MODEL}--${FW_VERSION}-${CMAKE_BUILD_TYPE}")
 
 # Set the output filename for the executable target (.elf)
 set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES 
@@ -78,7 +78,7 @@ math(EXPR APP_BASE_ADDR "0x08000000 + ${BOOTLOADER_SIZE}" OUTPUT_FORMAT HEXADECI
 target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
     # Pass the model, FW version, and FW type to compiler
     BUILD_FW_VERSION="${FW_VERSION}"
-    BUILD_FW_MODEL="${FW_MODEL}"
+    BUILD_BOARD_MODEL="${BOARD_MODEL}"
     BUILD_BOARD_HWID="${BOARD_HWID}"
     # Relocate the Vector Table Offset for bootloader compatibility
     USER_VECT_TAB_ADDRESS

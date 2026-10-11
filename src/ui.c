@@ -82,7 +82,7 @@ static const uint32_t ui_trend_v_scales[UI_Trend_VScale_Max + 1] = {
 };
 
 
-static void ui_menu_draw_right_aligned(const UIElement* element, int32_t offset_chars, const char* str, uint16_t text_color);
+static void ui_menu_draw_right_aligned(const UIElement* element, uint32_t offset_chars, const char* str, uint16_t text_color);
 static void ui_proc_icon_navigation_btn(const UIElement* element, UICommand command, int32_t encoder_step,
     uint16_t icon_width, uint16_t icon_height, const uint16_t* icon, UIScreen* target_screen);
 static void ui_proc_back_to_main(const UIElement* element, UICommand command, int32_t encoder_step);
@@ -675,7 +675,7 @@ static inline void ui_draw_static_label(const UIElement* element, UICommand comm
     }
 }
 
-static void ui_menu_draw_right_aligned(const UIElement* element, int32_t offset_chars, const char* str, uint16_t text_color)
+static void ui_menu_draw_right_aligned(const UIElement* element, uint32_t offset_chars, const char* str, uint16_t text_color)
 {
     size_t len = strlen(str);
     if (len > UI_MENU_STR_LEN - offset_chars) {
@@ -2306,7 +2306,7 @@ static void ui_proc_menu_main_debug(const UIElement* element, UICommand command,
 
 static void ui_proc_menu_main_model(const UIElement* element, UICommand command, int32_t encoder_step)
 {
-    ui_proc_menu_readonly_entry(element, command, encoder_step, "Model:", BUILD_FW_MODEL);
+    ui_proc_menu_readonly_entry(element, command, encoder_step, "Model:", BUILD_BOARD_MODEL);
 }
 
 static void ui_proc_menu_main_sn(const UIElement* element, UICommand command, int32_t encoder_step)

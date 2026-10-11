@@ -51,7 +51,7 @@ void init_ext_clock()
     HAL_Delay(750);
 
     bootlog_init();
-    bootlog_add(BUILD_FW_MODEL "   ver. " BUILD_FW_VERSION);
+    bootlog_add(BUILD_BOARD_MODEL "   ver. " BUILD_FW_VERSION);
     bootlog_add("Initializing...");
     bootlog_add("Enable OCXO");
 
