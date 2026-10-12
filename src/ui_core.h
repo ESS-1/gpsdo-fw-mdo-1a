@@ -30,7 +30,7 @@ extern bool ui_show_performance_timer;
 #define UI_COLOR_TREND_SCROLL       (ST7735_COLOR565(30, 230, 30))
 
 #define UI_COLOR_VCOM_DARK          (ST7735_COLOR565(0, 0, 0))
-#define UI_COLOR_VCOM_LIGHT         (ST7735_COLOR565(127, 127, 127))
+#define UI_COLOR_VCOM_LIGHT         (ST7735_COLOR565(128, 128, 128))
 #define UI_COLOR_VCOM_DEFAULT_VAL   (ST7735_COLOR565(0, 150, 255))
 
 typedef enum {

@@ -292,14 +292,14 @@ UIScreen ui_world_map_screen = {
 //------------------------------------------------------------------------------
 // LCD VCOM Adjustment Screen Layout
 //------------------------------------------------------------------------------
-static void ui_proc_lcd_adjust_vcom(const UIElement* element, UICommand command, int32_t encoder_step);
+static void ui_proc_lcd_adjust_vcom_pattern(const UIElement* element, UICommand command, int32_t encoder_step);
 static void ui_proc_lcd_adjust_vcom_back(const UIElement* element, UICommand command, int32_t encoder_step);
 static void ui_proc_lcd_adjust_vcom_adjust(const UIElement* element, UICommand command, int32_t encoder_step);
 
 static const UIElement ui_lcd_adjust_vcom_screen_elements[] = {
-    { 0,  0, 160, 80, UI_STYLE_NONE,                                 ui_proc_lcd_adjust_vcom        },
-    { 1,  1, 7,   10, UI_STYLE_FOCUSABLE,                            ui_proc_lcd_adjust_vcom_back   },
-    { 12, 1, 49,  10, UI_STYLE_FOCUSABLE | UI_STYLE_INPUT_CAPTURING, ui_proc_lcd_adjust_vcom_adjust },
+    { 0,  0, 160, 80, UI_STYLE_NONE,                                 ui_proc_lcd_adjust_vcom_pattern },
+    { 1,  1, 7,   10, UI_STYLE_FOCUSABLE,                            ui_proc_lcd_adjust_vcom_back    },
+    { 12, 1, 49,  10, UI_STYLE_FOCUSABLE | UI_STYLE_INPUT_CAPTURING, ui_proc_lcd_adjust_vcom_adjust  },
 };
 
 UIScreen ui_lcd_adjust_vcom_screen = {
@@ -2492,7 +2492,7 @@ static void ui_proc_world_map(const UIElement* element, UICommand command, int32
 //------------------------------------------------------------------------------
 // LCD VCOM Adjustment
 //------------------------------------------------------------------------------
-static void ui_proc_lcd_adjust_vcom(const UIElement* element, UICommand command, int32_t encoder_step)
+static void ui_proc_lcd_adjust_vcom_pattern(const UIElement* element, UICommand command, int32_t encoder_step)
 {
     if (command & UICommand_Init) {
         uint16_t w = element->width;
@@ -2549,6 +2549,16 @@ static void ui_proc_lcd_adjust_vcom_adjust(const UIElement* element, UICommand c
             lcd_vcom_to_draw = &(ee_storage.lcd_vcom);
         } else {
             lcd_vcom_to_draw = &ui_edit_lcd_vcom;
+        }
+    }
+
+    // Maximize brightness (100%) for VCOM adjustment; restore original level on exit
+    {
+        if (command & UICommand_Focus) {
+            set_brightness(100);
+        }
+        if (command & UICommand_LostFocus) {
+            set_brightness(ee_storage.brightness);
         }
     }
 
