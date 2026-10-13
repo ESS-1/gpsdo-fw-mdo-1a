@@ -1648,7 +1648,10 @@ static void ui_proc_out_freq(const UIElement* element, UICommand command, int32_
 
     // Draw preset
     if (preset_to_draw) {
-        uint16_t color = preset_to_draw->direct_xo ? UI_COLOR_OUT_DIRECT : UI_COLOR_TEXT;
+        uint16_t color = preset_to_draw->direct_xo
+            ? UI_COLOR_OUT_DIRECT
+            : preset_to_draw->out_div == 0 ? UI_COLOR_OUT_OFF : UI_COLOR_TEXT;
+
         ST7735_WriteStringNoWrap(element->x, element->y + 1, element->height - 1, preset_to_draw->label, Font_7x10, color, UI_COLOR_BG);
     }
 
