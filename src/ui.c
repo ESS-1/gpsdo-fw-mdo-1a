@@ -28,6 +28,8 @@
 // Swap bytes for ST7735 SPI format; used over __REV16 to evaluate constants at compile time
 #define ST7735_CLR2MEM(x) ((((uint16_t)(x) & 0x00FF) << 8) | (((uint16_t)(x) & 0xFF00) >> 8))
 
+#define BATCH_DRAW_STACK_BUF_SIZE 32
+
 
 typedef struct {
     uint16_t samples_per_bar;
@@ -716,7 +718,7 @@ static void ui_menu_draw_right_aligned(const UIElement* element, uint32_t offset
     }
 
     if (len < max_len) {
-        ST7735_FillRectangleFast(element->x + offset_chars * 7, element->y + 1, (max_len - len) * 7, element->height - 1, UI_COLOR_BG);
+        ST7735_FillRectangle(element->x + offset_chars * 7, element->y + 1, (max_len - len) * 7, element->height - 1, UI_COLOR_BG);
     }
 
     ST7735_WriteStringNoWrap(element->x + (UI_MENU_STR_LEN - len) * 7, element->y + 1, element->height - 1, str, Font_7x10, text_color, UI_COLOR_BG);
@@ -1319,7 +1321,7 @@ static void ui_proc_datetime(const UIElement* element, UICommand command, int32_
         if (command & (UICommand_Capture | UICommand_RestoreCapture)) {
             // Draw label and erase the remaining element area
             ST7735_WriteStringNoWrap(element->x, element->y + 1, element->height - 1, "Time offset: ", Font_7x10, UI_COLOR_TEXT, UI_COLOR_BG);
-            ST7735_FillRectangleFast(element->x + 13 * 7, element->y + 1, 7*7, element->height, UI_COLOR_BG);
+            ST7735_FillRectangle(element->x + 13 * 7, element->y + 1, 7*7, element->height, UI_COLOR_BG);
         }
 
         if (command & UICommand_EncoderStep) {
@@ -1368,7 +1370,7 @@ static void ui_proc_pps(const UIElement* element, UICommand command, int32_t enc
         ui_cache_pps_active = pps_active;
 
         uint16_t color = pps_active ? UI_COLOR_PPS_INDICATOR : UI_COLOR_BG;
-        ST7735_FillRectangleFast(element->x + 1, element->y + 1, 7, 7, color);
+        ST7735_FillRectangle(element->x + 1, element->y + 1, 7, 7, color);
     }
 
     if (command & UICommand_Click) {
@@ -1505,7 +1507,7 @@ static void ui_proc_status(const UIElement* element, UICommand command, int32_t 
             }
             ST7735_DrawImage(element->x + 2 * (5 + 1), element->y + 13, 5, 7, icon_digits_0_9_5x7[digit3]);
         } else {
-            ST7735_FillRectangleFast(element->x, element->y + 13, 5 + 1 + 5 + 1 + 5, 7, UI_COLOR_BG);
+            ST7735_FillRectangle(element->x, element->y + 13, 5 + 1 + 5 + 1 + 5, 7, UI_COLOR_BG);
         }
     }
 
@@ -1798,7 +1800,7 @@ static void ui_proc_edit_trend_param(const UIElement* element, UICommand command
 
     if (command & UICommand_Init) {
         // Draw label
-        ST7735_FillRectangleFast(element->x, element->y, element->width, 1, UI_COLOR_TREND_BG);
+        ST7735_FillRectangle(element->x, element->y, element->width, 1, UI_COLOR_TREND_BG);
         ST7735_WriteStringNoWrap(element->x, element->y + 1, element->height - 1, label, Font_7x10, UI_COLOR_TREND_BAR, UI_COLOR_TREND_BG);
 
         // Draw value
@@ -1928,7 +1930,7 @@ static void ui_trend_draw_timemarks(const UIElement* element)
     int32_t     min_x = max_x - scale.bars_per_grid; // Points to the bar just to the left of the leftmost bar
 
     // Clear old marks
-    ST7735_FillRectangleFast(element->x, element->y, element->width, element->height, UI_COLOR_BG);
+    ST7735_FillRectangle(element->x, element->y, element->width, element->height, UI_COLOR_BG);
 
     // Draw minor marks
     uint16_t y    = element->y + 1;
@@ -2154,7 +2156,7 @@ static void ui_trend_draw_scroll(const UIElement* element)
 
     // Do not draw slider if offset is 0
     if (offset == 0) {
-        ST7735_FillRectangleFast(element->x, element->y, element->width, element->height, UI_COLOR_BG);
+        ST7735_FillRectangle(element->x, element->y, element->width, element->height, UI_COLOR_BG);
         return;
     }
 
@@ -2172,18 +2174,18 @@ static void ui_trend_draw_scroll(const UIElement* element)
 
     // Draw left background
     if (slider_x > element->x) {
-        ST7735_FillRectangleFast(element->x, element->y, slider_x - element->x, element->height, UI_COLOR_TREND_BG);
+        ST7735_FillRectangle(element->x, element->y, slider_x - element->x, element->height, UI_COLOR_TREND_BG);
     }
 
     // Draw the slider
-    ST7735_FillRectangleFast(slider_x, element->y, slider_w, element->height, UI_COLOR_TREND_SCROLL);
+    ST7735_FillRectangle(slider_x, element->y, slider_w, element->height, UI_COLOR_TREND_SCROLL);
 
     // Right background
     uint16_t right_bg_x = slider_x + slider_w;
     uint16_t end_x      = element->x + element->width;
 
     if (end_x > right_bg_x) {
-        ST7735_FillRectangleFast(right_bg_x, element->y, end_x - right_bg_x, element->height, UI_COLOR_TREND_BG);
+        ST7735_FillRectangle(right_bg_x, element->y, end_x - right_bg_x, element->height, UI_COLOR_TREND_BG);
     }
 }
 
@@ -2442,7 +2444,7 @@ static void ui_world_map_draw_marker(uint16_t base_x, uint16_t base_y, int16_t x
                 ST7735_DrawImage(base_x + start_x, base_y + cy, width, 1, image_world_map_160x80 + left_px_idx);
             } else {
                 // Draw the horizontal marker line
-                ST7735_FillRectangleFast(base_x + start_x, base_y + cy, width, 1, UI_COLOR_MAP_MARKER);
+                ST7735_FillRectangle(base_x + start_x, base_y + cy, width, 1, UI_COLOR_MAP_MARKER);
             }
         } else {
             // Draw/erase one pixel of the vertical marker line
@@ -2504,18 +2506,28 @@ static void ui_proc_lcd_adjust_vcom_pattern(const UIElement* element, UICommand 
         uint16_t color_dark  = ST7735_CLR2MEM(UI_COLOR_VCOM_DARK);
         uint16_t color_light = ST7735_CLR2MEM(UI_COLOR_VCOM_LIGHT);
 
-        uint16_t* line = (uint16_t*)malloc(w * sizeof(uint16_t));
-        if (line != NULL) {
-            for (uint16_t y = 0; y < h; ++y) {
-                for (uint16_t x = 0; x < w; ++x) {
-                    line[x] = ((x + y) & 1) ? color_dark : color_light;
+        uint16_t chunk_buf[BATCH_DRAW_STACK_BUF_SIZE];
+        uint16_t chunk_idx = 0;
+
+        ST7735_Batch_Begin(element->x, element->y, w, h);
+        for (uint16_t y = 0; y < h; ++y) {
+            for (uint16_t x = 0; x < w; ++x) {
+                chunk_buf[chunk_idx++] = ((x + y) & 1) ? color_dark : color_light;
+
+                // Flush chunk when buffer is full
+                if (chunk_idx >= BATCH_DRAW_STACK_BUF_SIZE) {
+                    ST7735_Batch_Draw(chunk_buf, BATCH_DRAW_STACK_BUF_SIZE);
+                    chunk_idx = 0;
                 }
-
-                ST7735_DrawImage(element->x, element->y + y, w, 1, line);
             }
-
-            free(line);
         }
+
+        // Flush remaining pixels at the end
+        if (chunk_idx > 0) {
+            ST7735_Batch_Draw(chunk_buf, chunk_idx);
+        }
+
+        ST7735_Batch_End();
     }
 
     ui_default_element_proc(element, command, encoder_step);
@@ -2610,44 +2622,46 @@ static void ui_proc_lcd_gamma_test(const UIElement* element, UICommand command, 
         uint16_t w = element->width;
         uint16_t h = element->height;
 
-        uint16_t* line = (uint16_t*)malloc(w * sizeof(uint16_t));
-        if (line != NULL) {
-            for (uint16_t y = 0; y < h; ++y) {
-                // Determine color mask based on vertical position
-                uint16_t mask = 0;
-                if (y < 10 || y >= 70) {
-                    mask = 0xFFFF; // Grayscale
-                } else if (y < 20) {
-                    mask = 0xF800; // Red
-                } else if (y < 30) {
-                    mask = 0xFFE0; // Yellow
-                } else if (y < 40) {
-                    mask = 0x07E0; // Green
-                } else if (y < 50) {
-                    mask = 0x07FF; // Cyan
-                } else if (y < 60) {
-                    mask = 0x001F; // Blue
-                } else {
-                    mask = 0xF81F; // Magenta
-                }
+        uint16_t chunk_buf[BATCH_DRAW_STACK_BUF_SIZE];
 
-                // Fill the line buffer with a horizontal gradient
-                for (uint16_t x = 0; x < w; ++x) {
-                    uint32_t t = (w > 1) ? (255U * x / (w - 1)) : 0;
-                    line[x]    = __REV16(ST7735_COLOR565(t, t, t) & mask);
-                }
-
-                // Draw the lines
-                uint16_t y_end = (y + 10 < h) ? y + 10 : h;
-
-                for (; y < y_end; ++y) {
-                    ST7735_DrawImage(element->x, element->y + y, w, 1, line);
-                }
-                y = y_end - 1;
+        ST7735_Batch_Begin(element->x, element->y, w, h);
+        for (uint16_t y = 0; y < h; ++y) {
+            // Determine color mask based on vertical position
+            uint16_t mask = 0;
+            if (y < 10 || y >= 70) {
+                mask = 0xFFFF; // Grayscale
+            } else if (y < 20) {
+                mask = 0xF800; // Red
+            } else if (y < 30) {
+                mask = 0xFFE0; // Yellow
+            } else if (y < 40) {
+                mask = 0x07E0; // Green
+            } else if (y < 50) {
+                mask = 0x07FF; // Cyan
+            } else if (y < 60) {
+                mask = 0x001F; // Blue
+            } else {
+                mask = 0xF81F; // Magenta
             }
 
-            free(line);
+            // Draw horizontal gradient
+            uint16_t chunk_buf_idx = 0;
+            for (uint16_t x = 0; x < w; ++x) {
+                uint32_t t = (w > 1) ? (255U * x / (w - 1)) : 0;
+                chunk_buf[chunk_buf_idx++] = __REV16(ST7735_COLOR565(t, t, t) & mask);
+
+                if (chunk_buf_idx >= BATCH_DRAW_STACK_BUF_SIZE) {
+                    ST7735_Batch_Draw(chunk_buf, BATCH_DRAW_STACK_BUF_SIZE);
+                    chunk_buf_idx = 0;
+                }
+            }
+
+            if (chunk_buf_idx > 0) {
+                ST7735_Batch_Draw(chunk_buf, chunk_buf_idx);
+            }
         }
+
+        ST7735_Batch_End();
     }
 
     if (command & UICommand_Click) {
@@ -2704,7 +2718,7 @@ static void ui_draw_coord_dd_right_aligned(const UIElement* element, int32_t coo
 
     if (len < 12) {
         uint16_t empty_chars = 12 - len;
-        ST7735_FillRectangleFast(element->x + 10 * 7, element->y + 1, empty_chars * 7, element->height - 1, UI_COLOR_BG);
+        ST7735_FillRectangle(element->x + 10 * 7, element->y + 1, empty_chars * 7, element->height - 1, UI_COLOR_BG);
     }
 
     ST7735_WriteStringNoWrap(element->x + offset * 7, element->y + 1, element->height - 1, s, Font_7x10, UI_COLOR_MENU_LABEL, UI_COLOR_BG);
@@ -2768,7 +2782,7 @@ static void ui_draw_coord_ddm_right_aligned(const UIElement* element, const char
 
     // Clear remaining space
     if (pos > 0) {
-        ST7735_FillRectangleFast(element->x, element->y + 1, pos * 7, element->height - 1, UI_COLOR_BG);
+        ST7735_FillRectangle(element->x, element->y + 1, pos * 7, element->height - 1, UI_COLOR_BG);
     }
 }
 
@@ -3206,7 +3220,7 @@ static void ui_proc_menu_pps_force_sync(const UIElement* element, UICommand comm
         uint16_t color_text = ui_cache_sync_pps_out ? UI_COLOR_INACTIVE_TEXT : UI_COLOR_TEXT;
         uint16_t color_bg   = ui_cache_sync_pps_out ? UI_COLOR_INACTIVE_BUTTON_BG : UI_COLOR_BUTTON_BG;
 
-        ST7735_FillRectangleFast(element->x, element->y, element->width, element->height, color_bg);
+        ST7735_FillRectangle(element->x, element->y, element->width, element->height, color_bg);
         ST7735_WriteStringNoWrap(element->x + 9, element->y + 3, 10, "Force Sync.", Font_7x10, color_text, color_bg);
     }
 

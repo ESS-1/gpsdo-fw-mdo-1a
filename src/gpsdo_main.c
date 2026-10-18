@@ -39,7 +39,7 @@ void init_ext_clock()
 
     // Initialize LCD
     ST7735_Init();
-    ST7735_FillScreenFast(ST7735_BLACK);
+    ST7735_FillScreen(ST7735_BLACK);
 
     // Show boot logo
     volatile const boot_logo_t* logo = &(G_BOOT_DATA->boot_logo);

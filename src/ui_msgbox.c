@@ -165,7 +165,7 @@ static void ui_msgbox_button_proc(const UIElement* element, UICommand command, i
     uint16_t text_offset_px, const char* text, UI_MsgBoxButton result)
 {
     if (command & UICommand_Init) {
-        ST7735_FillRectangleFast(element->x, element->y, element->width, element->height, UI_COLOR_BUTTON_BG);
+        ST7735_FillRectangle(element->x, element->y, element->width, element->height, UI_COLOR_BUTTON_BG);
         ST7735_WriteStringNoWrap(element->x + text_offset_px, element->y + 2, 18, text, Font_11x18, UI_COLOR_TEXT, UI_COLOR_BUTTON_BG);
     }
     if (command & UICommand_Click) {

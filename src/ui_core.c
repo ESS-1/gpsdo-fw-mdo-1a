@@ -70,10 +70,10 @@ void ui_default_element_proc(const UIElement* element, UICommand command, int32_
         uint16_t w  = element->width + 2;
         uint16_t h  = element->height + 2;
 
-        ST7735_FillRectangle    (x1,     y1,     1, h, frame_color);
-        ST7735_FillRectangleFast(x1,     y1,     w, 1, frame_color);
-        ST7735_FillRectangle    (x1+w-1, y1,     1, h, frame_color);
-        ST7735_FillRectangleFast(x1,     y1+h-1, w, 1, frame_color);
+        ST7735_FillRectangle(x1,     y1,     1, h, frame_color);
+        ST7735_FillRectangle(x1,     y1,     w, 1, frame_color);
+        ST7735_FillRectangle(x1+w-1, y1,     1, h, frame_color);
+        ST7735_FillRectangle(x1,     y1+h-1, w, 1, frame_color);
     }
 }
 
@@ -91,7 +91,7 @@ UIScreen* ui_get_active_screen()
 
 static void ui_force_set_screen(UIScreen* screen)
 {
-    ST7735_FillRectangleFast(0, 0, ST7735_WIDTH, ST7735_HEIGHT, UI_COLOR_BG);
+    ST7735_FillRectangle(0, 0, ST7735_WIDTH, ST7735_HEIGHT, UI_COLOR_BG);
     ui_current_screen = screen;
 
     if (ui_current_screen == NULL) {
