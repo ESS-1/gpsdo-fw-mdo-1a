@@ -193,6 +193,7 @@ static void ui_proc_menu_main_to_page3(const UIElement* element, UICommand comma
 static void ui_proc_menu_main_brightness(const UIElement* element, UICommand command, int32_t encoder_step);
 static void ui_proc_menu_main_uptime(const UIElement* element, UICommand command, int32_t encoder_step);
 static void ui_proc_menu_main_eeprom_writes(const UIElement* element, UICommand command, int32_t encoder_step);
+static void ui_proc_menu_main_update_fw(const UIElement* element, UICommand command, int32_t encoder_step);
 // Page 2
 static void ui_proc_menu_main_lcd_adjust_vcom(const UIElement* element, UICommand command, int32_t encoder_step);
 static void ui_proc_menu_main_lcd_gamma_test(const UIElement* element, UICommand command, int32_t encoder_step);
@@ -218,6 +219,7 @@ static const UIElement ui_menu_screen_elements_page1[] = {
     { 1, 20, 154, 11, UI_STYLE_FOCUSABLE | UI_STYLE_INPUT_CAPTURING, ui_proc_menu_main_brightness    },
     { 1, 32, 154, 11, UI_STYLE_NONE,                                 ui_proc_menu_main_uptime        },
     { 1, 44, 154, 11, UI_STYLE_NONE,                                 ui_proc_menu_main_eeprom_writes },
+    { 1, 68, 154, 11, UI_STYLE_FOCUSABLE,                            ui_proc_menu_main_update_fw     },
 };
 
 static UIScreen ui_menu_screen_page1 = {
@@ -287,6 +289,23 @@ UIScreen ui_world_map_screen = {
     ui_world_map_screen_elements,
     NULL,
     ARRAY_SIZE(ui_world_map_screen_elements),
+    false,
+};
+
+
+//------------------------------------------------------------------------------
+// Update Firmware Screen Layout
+//------------------------------------------------------------------------------
+static void ui_proc_update_fw_qr(const UIElement* element, UICommand command, int32_t encoder_step);
+
+static const UIElement ui_update_fw_screen_elements[] = {
+    { 0, 0, 160, 80, UI_STYLE_FOCUSABLE | UI_STYLE_NOFRAME, ui_proc_update_fw_qr },
+};
+
+UIScreen ui_update_fw_screen = {
+    ui_update_fw_screen_elements,
+    NULL,
+    ARRAY_SIZE(ui_update_fw_screen_elements),
     false,
 };
 
@@ -2311,6 +2330,11 @@ static void ui_proc_menu_main_eeprom_writes(const UIElement* element, UICommand 
     ui_proc_menu_readonly_u32(element, command, encoder_step, "EEPROM Writes:", &ui_cache_total_writes, ee_storage.total_writes, 14, "%8" PRIu32);
 }
 
+static void ui_proc_menu_main_update_fw(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    ui_proc_menu_link(element, command, encoder_step, "> Update Firmware...", &ui_update_fw_screen);
+}
+
 static void ui_proc_menu_main_lcd_adjust_vcom(const UIElement* element, UICommand command, int32_t encoder_step)
 {
     ui_proc_menu_link(element, command, encoder_step, "> Adjust LCD VCOM...", &ui_lcd_adjust_vcom_screen);
@@ -2495,6 +2519,34 @@ static void ui_proc_world_map(const UIElement* element, UICommand command, int32
 
 
 //------------------------------------------------------------------------------
+// Update Firmware
+//------------------------------------------------------------------------------
+static void ui_proc_update_fw_qr(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    if (command & UICommand_Init) {
+        // Show the firmware update QR code
+        volatile const barcode_t* qr = &(G_BOOT_DATA->app_update_url);
+
+        ST7735_FillRectangle(element->x, element->y, element->width, element->height, qr->bg_color);
+
+        uint16_t qr_w = qr->width * qr->scale_x;
+        uint16_t qr_h = qr->height * qr->scale_y;
+
+        if (element->width >= qr_w && element->height >= qr_h) {
+            ST7735_DrawBarcode((element->width - qr_w) / 2, (element->height - qr_h) / 2,
+                qr->width, qr->height, qr->scale_x, qr->scale_y, qr->bar_color, qr->bg_color, qr->data);
+        }
+    }
+
+    if (command & UICommand_Click) {
+        ui_show_screen(&ui_main_screen);
+    }
+
+    ui_default_element_proc(element, command, encoder_step);
+}
+
+
+//------------------------------------------------------------------------------
 // LCD VCOM Adjustment
 //------------------------------------------------------------------------------
 static void ui_proc_lcd_adjust_vcom_pattern(const UIElement* element, UICommand command, int32_t encoder_step)
@@ -2507,24 +2559,24 @@ static void ui_proc_lcd_adjust_vcom_pattern(const UIElement* element, UICommand 
         uint16_t color_light = ST7735_CLR2MEM(UI_COLOR_VCOM_LIGHT);
 
         uint16_t chunk_buf[BATCH_DRAW_STACK_BUF_SIZE];
-        uint16_t chunk_idx = 0;
+        uint16_t chunk_buf_idx = 0;
 
         ST7735_Batch_Begin(element->x, element->y, w, h);
         for (uint16_t y = 0; y < h; ++y) {
             for (uint16_t x = 0; x < w; ++x) {
-                chunk_buf[chunk_idx++] = ((x + y) & 1) ? color_dark : color_light;
+                chunk_buf[chunk_buf_idx++] = ((x + y) & 1) ? color_dark : color_light;
 
                 // Flush chunk when buffer is full
-                if (chunk_idx >= BATCH_DRAW_STACK_BUF_SIZE) {
+                if (chunk_buf_idx >= BATCH_DRAW_STACK_BUF_SIZE) {
                     ST7735_Batch_Draw(chunk_buf, BATCH_DRAW_STACK_BUF_SIZE);
-                    chunk_idx = 0;
+                    chunk_buf_idx = 0;
                 }
             }
         }
 
         // Flush remaining pixels at the end
-        if (chunk_idx > 0) {
-            ST7735_Batch_Draw(chunk_buf, chunk_idx);
+        if (chunk_buf_idx > 0) {
+            ST7735_Batch_Draw(chunk_buf, chunk_buf_idx);
         }
 
         ST7735_Batch_End();
