@@ -299,7 +299,7 @@ UIScreen ui_world_map_screen = {
 static void ui_proc_update_fw_qr(const UIElement* element, UICommand command, int32_t encoder_step);
 
 static const UIElement ui_update_fw_screen_elements[] = {
-    { 0, 0, 160, 80, UI_STYLE_FOCUSABLE | UI_STYLE_NOFRAME, ui_proc_update_fw_qr },
+    { 80, 0, 80, 80, UI_STYLE_FOCUSABLE | UI_STYLE_NOFRAME, ui_proc_update_fw_qr },
 };
 
 UIScreen ui_update_fw_screen = {
@@ -2529,12 +2529,14 @@ static void ui_proc_update_fw_qr(const UIElement* element, UICommand command, in
 
         ST7735_FillRectangle(element->x, element->y, element->width, element->height, qr->bg_color);
 
-        uint16_t qr_w = qr->width * qr->scale_x;
-        uint16_t qr_h = qr->height * qr->scale_y;
+        uint16_t max_scale_x = element->width / qr->width;
+        uint16_t max_scale_y = element->height / qr->height;
+        uint16_t scale   = (max_scale_x < max_scale_y) ? max_scale_x : max_scale_y;
 
-        if (element->width >= qr_w && element->height >= qr_h) {
-            ST7735_DrawBarcode((element->width - qr_w) / 2, (element->height - qr_h) / 2,
-                qr->width, qr->height, qr->scale_x, qr->scale_y, qr->bar_color, qr->bg_color, qr->data);
+        if (scale > 0) {
+            uint16_t x = element->x + (element->width - (qr->width * scale)) / 2;
+            uint16_t y = element->y + (element->height - (qr->height * scale)) / 2;
+            ST7735_DrawBarcode(x, y, qr->width, qr->height, scale, scale, qr->bar_color, qr->bg_color, qr->data);
         }
     }
 
