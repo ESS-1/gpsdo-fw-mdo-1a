@@ -297,11 +297,13 @@ UIScreen ui_world_map_screen = {
 // Update Firmware Screen Layout
 //------------------------------------------------------------------------------
 static void ui_proc_update_fw_label(const UIElement* element, UICommand command, int32_t encoder_step);
+static void ui_proc_update_fw_boot(const UIElement* element, UICommand command, int32_t encoder_step);
 static void ui_proc_update_fw_qr(const UIElement* element, UICommand command, int32_t encoder_step);
 
 static const UIElement ui_update_fw_screen_elements[] = {
     { 1,  1,  15, 16, UI_STYLE_FOCUSABLE, ui_proc_back_to_main    },
     { 1,  32, 77, 18, UI_STYLE_NONE,      ui_proc_update_fw_label },
+    { 1,  68, 77, 11, UI_STYLE_FOCUSABLE, ui_proc_update_fw_boot  },
     { 80, 0,  80, 80, UI_STYLE_NONE,      ui_proc_update_fw_qr    },
 };
 
@@ -2533,6 +2535,17 @@ static void ui_proc_update_fw_label(const UIElement* element, UICommand command,
     ui_default_element_proc(element, command, encoder_step);
 }
 
+static void ui_proc_update_fw_boot(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    ui_draw_static_label(element, command, "> Boot Mode", UI_COLOR_LINK);
+
+    if (command & UICommand_Click) {
+        // Reset the MCU. Because the reset is near-instant, the bootloader will detect the user's prolonged button press upon startup.
+        HAL_NVIC_SystemReset();
+    }
+
+    ui_default_element_proc(element, command, encoder_step);
+}
 
 static void ui_proc_update_fw_qr(const UIElement* element, UICommand command, int32_t encoder_step)
 {
