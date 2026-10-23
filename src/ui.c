@@ -296,10 +296,13 @@ UIScreen ui_world_map_screen = {
 //------------------------------------------------------------------------------
 // Update Firmware Screen Layout
 //------------------------------------------------------------------------------
+static void ui_proc_update_fw_label(const UIElement* element, UICommand command, int32_t encoder_step);
 static void ui_proc_update_fw_qr(const UIElement* element, UICommand command, int32_t encoder_step);
 
 static const UIElement ui_update_fw_screen_elements[] = {
-    { 80, 0, 80, 80, UI_STYLE_FOCUSABLE | UI_STYLE_NOFRAME, ui_proc_update_fw_qr },
+    { 1,  1,  15, 16, UI_STYLE_FOCUSABLE, ui_proc_back_to_main    },
+    { 1,  32, 77, 18, UI_STYLE_NONE,      ui_proc_update_fw_label },
+    { 80, 0,  80, 80, UI_STYLE_NONE,      ui_proc_update_fw_qr    },
 };
 
 UIScreen ui_update_fw_screen = {
@@ -2521,6 +2524,16 @@ static void ui_proc_world_map(const UIElement* element, UICommand command, int32
 //------------------------------------------------------------------------------
 // Update Firmware
 //------------------------------------------------------------------------------
+static void ui_proc_update_fw_label(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    if (command & UICommand_Init) {
+        ST7735_WriteStringNoWrap(element->x, element->y, element->height, "GET FW:", Font_11x18, UI_COLOR_TEXT, UI_COLOR_BG);
+    }
+
+    ui_default_element_proc(element, command, encoder_step);
+}
+
+
 static void ui_proc_update_fw_qr(const UIElement* element, UICommand command, int32_t encoder_step)
 {
     if (command & UICommand_Init) {
@@ -2538,10 +2551,6 @@ static void ui_proc_update_fw_qr(const UIElement* element, UICommand command, in
             uint16_t y = element->y + (element->height - (qr->height * scale)) / 2;
             ST7735_DrawBarcode(x, y, qr->width, qr->height, scale, scale, qr->bar_color, qr->bg_color, qr->data);
         }
-    }
-
-    if (command & UICommand_Click) {
-        ui_show_screen(&ui_main_screen);
     }
 
     ui_default_element_proc(element, command, encoder_step);
