@@ -49,6 +49,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     src/ui.c
     src/encoder.c
     src/timer.c
+    src/adc_mon.c
 )
 
 # Add linked libraries

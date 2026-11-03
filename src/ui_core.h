@@ -3,8 +3,9 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "st7735.h"
 
-extern bool ui_show_performance_timer;
+extern uint8_t ui_show_performance_timer;
 
 
 #define UI_COLOR_BG                 (ST7735_BLACK)

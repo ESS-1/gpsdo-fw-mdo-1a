@@ -73,6 +73,8 @@ void Error_Handler(void);
 #define OCXO_EN_GPIO_Port GPIOA
 #define LCD_SDA_Pin GPIO_PIN_7
 #define LCD_SDA_GPIO_Port GPIOA
+#define VUSB_SEN_Pin GPIO_PIN_0
+#define VUSB_SEN_GPIO_Port GPIOB
 #define PPS_OUTPUT_Pin GPIO_PIN_1
 #define PPS_OUTPUT_GPIO_Port GPIOB
 #define LED1_Pin GPIO_PIN_2

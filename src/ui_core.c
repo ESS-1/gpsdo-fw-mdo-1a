@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <inttypes.h>
 
-bool ui_show_performance_timer = false;
+uint8_t ui_show_performance_timer = 0;
 
 static UIScreen* ui_current_screen         = NULL;
 static UIScreen* ui_screen_to_show         = NULL;

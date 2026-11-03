@@ -11,6 +11,7 @@
 #include "int.h"
 #include "tim.h"
 #include "pll.h"
+#include "adc_mon.h"
 #include "bootlog.h"
 #include "st7735.h"
 #include "st7735_config.h"
@@ -91,7 +92,7 @@ void init_ext_clock()
     }
 
     // Switch to the normal operation mode
-    bootlog_add("Use OCXO clock...");
+    bootlog_add("Use OCXO clock");
     HAL_Delay(750);
 }
 
@@ -112,6 +113,33 @@ void set_lcd_vcom(uint16_t vcom)
 {
     uint8_t data = (uint8_t)vcom;
     ST7735_ExecuteCommand(ST7735_VMCTR1, &data, 1);
+}
+
+void load_calibration(bool restore_defaults)
+{
+    if (restore_defaults || ee_storage.calibration.adc_vrefint_mv < ADC_MON_CAL_VREFINT_MIN
+                         || ee_storage.calibration.adc_vrefint_mv > ADC_MON_CAL_VREFINT_MAX) {
+        ee_storage.calibration.adc_vrefint_mv = ADC_MON_CAL_VREFINT_NOM;
+        ee_is_changed                         = true;
+    }
+
+    if (restore_defaults || ee_storage.calibration.adc_vusb_div_ratio < ADC_MON_CAL_VUSB_DIV_MIN
+                         || ee_storage.calibration.adc_vusb_div_ratio > ADC_MON_CAL_VUSB_DIV_MAX) {
+        ee_storage.calibration.adc_vusb_div_ratio = ADC_MON_CAL_VUSB_DIV_NOM;
+        ee_is_changed                             = true;
+    }
+
+    if (restore_defaults || ee_storage.calibration.adc_temp_v25_mv < ADC_MON_CAL_TEMP_V25_MIN
+                         || ee_storage.calibration.adc_temp_v25_mv > ADC_MON_CAL_TEMP_V25_MAX) {
+        ee_storage.calibration.adc_temp_v25_mv = ADC_MON_CAL_TEMP_V25_NOM;
+        ee_is_changed                          = true;
+    }
+
+    if (restore_defaults || ee_storage.calibration.adc_temp_slope < ADC_MON_CAL_TEMP_SLOPE_MIN
+                         || ee_storage.calibration.adc_temp_slope > ADC_MON_CAL_TEMP_SLOPE_MAX) {
+        ee_storage.calibration.adc_temp_slope = ADC_MON_CAL_TEMP_SLOPE_NOM;
+        ee_is_changed                         = true;
+    }
 }
 
 void load_settings(bool restore_defaults, bool apply_settings)
@@ -311,7 +339,10 @@ void gpsdo()
     enable_usb();
     gps_start_it();
 
+    load_calibration(false);
     load_settings(false, true);
+
+    adc_mon_init();
 
     ui_trend_init();
     ui_show_screen(&ui_main_screen);
@@ -338,6 +369,7 @@ void gpsdo()
 
         gps_run();
         pll_run();
+        adc_mon_run();
         ui_trend_run();
         ui_run();
 
