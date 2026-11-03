@@ -82,17 +82,15 @@ static void apply_adjustment(int32_t adjustment)
         return;
     }
 
-    if ((TIM1->CCR2 + adjustment) > 0xFFFF)
-    {
+    int32_t current = (int32_t)TIM1->CCR2;
+    int32_t target  = current + adjustment;
+
+    if (target > 0xFFFF) {
         TIM1->CCR2 = 0xFFFF;
-    }
-    else if ((((int32_t)TIM1->CCR2) + adjustment) < 0)
-    {
+    } else if (target < 0) {
         TIM1->CCR2 = 0;
-    }
-    else
-    {
-        TIM1->CCR2 += adjustment;
+    } else {
+        TIM1->CCR2 = target;
     }
 }
 
