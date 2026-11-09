@@ -6,10 +6,10 @@
 #include <stdbool.h>
 
 typedef struct {
-    uint16_t adc_vrefint_mv;     // Calibrated Vrefint bandgap in mV (nominal 1200)
-    uint16_t adc_vusb_div_ratio; // Vusb divider ratio in permille (nominal 2000 = 2.000x)
-    int16_t  adc_temp_v25_mv;    // Voltage at 25 deg. C (nominal 1430)
-    uint16_t adc_temp_slope;     // Slope in uV/dK (nominal 430)
+    int8_t adc_adj_vrefint_mv;     // Vrefint bandgap adjustment in mV
+    int8_t adc_adj_vusb_div_ratio; // Vusb divider ratio adjustment in permille
+    int8_t adc_adj_temp_v25_mv;    // Voltage at 25 deg. C adjustment in mV
+    int8_t adc_adj_temp_slope;     // Slope adjustment in uV/dK
 } calibration_t;
 
 typedef struct

@@ -117,28 +117,28 @@ void set_lcd_vcom(uint16_t vcom)
 
 void load_calibration(bool restore_defaults)
 {
-    if (restore_defaults || ee_storage.calibration.adc_vrefint_mv < ADC_MON_CAL_VREFINT_MIN
-                         || ee_storage.calibration.adc_vrefint_mv > ADC_MON_CAL_VREFINT_MAX) {
-        ee_storage.calibration.adc_vrefint_mv = ADC_MON_CAL_VREFINT_NOM;
-        ee_is_changed                         = true;
+    if (restore_defaults || ee_storage.calibration.adc_adj_vrefint_mv < ADC_MON_CAL_VREFINT_ADJ_MIN
+                         || ee_storage.calibration.adc_adj_vrefint_mv > ADC_MON_CAL_VREFINT_ADJ_MAX) {
+        ee_storage.calibration.adc_adj_vrefint_mv = 0;
+        ee_is_changed = true;
     }
 
-    if (restore_defaults || ee_storage.calibration.adc_vusb_div_ratio < ADC_MON_CAL_VUSB_DIV_MIN
-                         || ee_storage.calibration.adc_vusb_div_ratio > ADC_MON_CAL_VUSB_DIV_MAX) {
-        ee_storage.calibration.adc_vusb_div_ratio = ADC_MON_CAL_VUSB_DIV_NOM;
-        ee_is_changed                             = true;
+    if (restore_defaults || ee_storage.calibration.adc_adj_vusb_div_ratio < ADC_MON_CAL_VUSB_DIV_ADJ_MIN
+                         || ee_storage.calibration.adc_adj_vusb_div_ratio > ADC_MON_CAL_VUSB_DIV_ADJ_MAX) {
+        ee_storage.calibration.adc_adj_vusb_div_ratio = 0;
+        ee_is_changed = true;
     }
 
-    if (restore_defaults || ee_storage.calibration.adc_temp_v25_mv < ADC_MON_CAL_TEMP_V25_MIN
-                         || ee_storage.calibration.adc_temp_v25_mv > ADC_MON_CAL_TEMP_V25_MAX) {
-        ee_storage.calibration.adc_temp_v25_mv = ADC_MON_CAL_TEMP_V25_NOM;
-        ee_is_changed                          = true;
+    if (restore_defaults || ee_storage.calibration.adc_adj_temp_v25_mv < ADC_MON_CAL_TEMP_V25_ADJ_MIN
+                         || ee_storage.calibration.adc_adj_temp_v25_mv > ADC_MON_CAL_TEMP_V25_ADJ_MAX) {
+        ee_storage.calibration.adc_adj_temp_v25_mv = 0;
+        ee_is_changed = true;
     }
 
-    if (restore_defaults || ee_storage.calibration.adc_temp_slope < ADC_MON_CAL_TEMP_SLOPE_MIN
-                         || ee_storage.calibration.adc_temp_slope > ADC_MON_CAL_TEMP_SLOPE_MAX) {
-        ee_storage.calibration.adc_temp_slope = ADC_MON_CAL_TEMP_SLOPE_NOM;
-        ee_is_changed                         = true;
+    if (restore_defaults || ee_storage.calibration.adc_adj_temp_slope < ADC_MON_CAL_TEMP_SLOPE_ADJ_MIN
+                         || ee_storage.calibration.adc_adj_temp_slope > ADC_MON_CAL_TEMP_SLOPE_ADJ_MAX) {
+        ee_storage.calibration.adc_adj_temp_slope = 0;
+        ee_is_changed = true;
     }
 }
 

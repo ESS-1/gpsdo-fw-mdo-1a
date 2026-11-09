@@ -8,6 +8,11 @@
 
 #define ADC_MAX_CODE                 4095UL // 12-bit ADC full scale
 
+#define ADC_MON_CAL_VREFINT_NOM      1200
+#define ADC_MON_CAL_VUSB_DIV_NOM     2000
+#define ADC_MON_CAL_TEMP_V25_NOM     1430
+#define ADC_MON_CAL_TEMP_SLOPE_NOM   430
+
 static bool     adc_mon_is_idle          = true;
 static uint32_t adc_mon_last_measurement = 0;
 static uint32_t adc_mon_last_calibration = 0;
@@ -38,19 +43,20 @@ static void adc_mon_update_measurements(void)
     }
 
     // Calculate Vcc (Vdda rail) using the internal bandgap
-    uint32_t cal_vref = (uint32_t)ee_storage.calibration.adc_vrefint_mv;
-    uint32_t vdda     = ((cal_vref * ADC_MAX_CODE) + (raw_vrefint / 2)) / raw_vrefint;
-    adc_mon_vdda_mv   = (uint16_t)vdda;
+    uint32_t vref   = (uint32_t)((int32_t)ADC_MON_CAL_VREFINT_NOM + (int32_t)ee_storage.calibration.adc_adj_vrefint_mv);
+    uint32_t vdda   = ((vref * ADC_MAX_CODE) + (raw_vrefint / 2)) / raw_vrefint;
+    adc_mon_vdda_mv = (uint16_t)vdda;
 
     // Calculate Vusb
+    uint64_t vusb_div   = (uint64_t)((int32_t)ADC_MON_CAL_VUSB_DIV_NOM + (int32_t)ee_storage.calibration.adc_adj_vusb_div_ratio);
     uint32_t denom_vusb = raw_vrefint * 1000;
-    uint64_t numer_vusb = (uint64_t)raw_vusb * (uint64_t)cal_vref * (uint64_t)ee_storage.calibration.adc_vusb_div_ratio;
+    uint64_t numer_vusb = (uint64_t)raw_vusb * (uint64_t)vref * vusb_div;
     adc_mon_vusb_mv     = (uint16_t)((numer_vusb + (denom_vusb / 2)) / denom_vusb);
 
     // Calculate MCU temperature
     int32_t temp_mv_x10 = (int32_t)(((raw_temp * vdda * 10) + (ADC_MAX_CODE / 2)) / ADC_MAX_CODE);
-    int32_t t_v25       = (int32_t)ee_storage.calibration.adc_temp_v25_mv;
-    int32_t t_slope     = (int32_t)ee_storage.calibration.adc_temp_slope;
+    int32_t t_v25       = (int32_t)ADC_MON_CAL_TEMP_V25_NOM + (int32_t)ee_storage.calibration.adc_adj_temp_v25_mv;
+    int32_t t_slope     = (int32_t)ADC_MON_CAL_TEMP_SLOPE_NOM + (int32_t)ee_storage.calibration.adc_adj_temp_slope;
     adc_mon_temp_deci_c = (int16_t)((((t_v25 * 10 - temp_mv_x10) * 100 + (t_slope / 2)) / t_slope) + 250);
 }
 

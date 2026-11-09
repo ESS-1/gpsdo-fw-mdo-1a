@@ -2,6 +2,8 @@
 #include "frequency.h"
 #include "icons.h"
 #include "eeprom.h"
+#include "adc_mon.h"
+#include "gps.h"
 
 #include <inttypes.h>
 #include <memory.h>
@@ -46,11 +48,11 @@ void ui_format_ppb_5char(int32_t ppb_signed, char* buffer, size_t bufferSize)
     } else {
         int32_t sign = ppb_signed < 0 ? -1 : 1;
         if (ppb < 999950u) {
-            snprintf(buffer, bufferSize, "%5" PRId32, sign * (int32_t)((ppb + 50u) / 100u));
+            snprintf(buffer, bufferSize, "%5" PRIi32, sign * (int32_t)((ppb + 50u) / 100u));
         } else if (ppb < 99950000u) {
-            snprintf(buffer, bufferSize, "%4" PRId32 "K", sign * (int32_t)((ppb + 50000u) / 100000u));
+            snprintf(buffer, bufferSize, "%4" PRIi32 "K", sign * (int32_t)((ppb + 50000u) / 100000u));
         } else {
-            snprintf(buffer, bufferSize, "%4" PRId32 "M", sign * (int32_t)((ppb + 50000000u) / 100000000u));
+            snprintf(buffer, bufferSize, "%4" PRIi32 "M", sign * (int32_t)((ppb + 50000000u) / 100000000u));
         }
     }
 }
@@ -98,6 +100,32 @@ const char* ui_get_month_name_3char(uint8_t month_num)
     }
 
     return months[month_num];
+}
+
+void ui_format_adc_voltage_fp2i3f_u16_8char(char* buf, size_t buf_char_count, const void* value, const char*)
+{
+    uint16_t mv = *(const uint16_t*)value;
+
+    if (mv != ADC_MON_VOLTAGE_NO_DATA) {
+        snprintf(buf, buf_char_count, "%2" PRIu16 ".%03" PRIu16 " V", (uint16_t)(mv / 1000), (uint16_t)(mv % 1000));
+    } else {
+        strlcpy(buf, "   N/A V", buf_char_count);
+    }
+}
+
+void ui_format_adc_temperature_fp3i1f_i16_5char(char* buf, size_t buf_char_count, const void* value, const char*)
+{
+    int16_t temp = *(const int16_t*)value;
+
+    if (temp != ADC_MON_TEMP_NO_DATA) {
+        if (temp < 0 && temp > -10) {
+            snprintf(buf, buf_char_count, " -0.%01" PRIi16, (int16_t)(-temp % 10));
+        } else {
+            snprintf(buf, buf_char_count, "%3" PRIi16 ".%01" PRIi16, (int16_t)(temp / 10), (int16_t)abs(temp % 10));
+        }
+    } else {
+        strlcpy(buf, "  N/A", buf_char_count);
+    }
 }
 
 
@@ -220,27 +248,33 @@ void ui_format_i32(char* buf, size_t buf_char_count, const void* value, const ch
     snprintf(buf, buf_char_count, fmt, *(const int32_t*)value);
 }
 
+static void ui_menu_custom_draw_value(const UIElement* element, uint16_t value_offset, uint16_t text_color,
+    const void* value, UIFormatValue format, const char* fmt)
+{
+    char s[UI_MENU_VALUE_BUFFER_SIZE] = { '\0' };
+
+    if (format != NULL) {
+        format(s, ARRAY_SIZE(s), value, fmt);
+    }
+
+    ST7735_WriteStringNoWrap(element->x + value_offset * 7, element->y + 1, element->height - 1, s, Font_7x10, text_color, UI_COLOR_BG);
+}
+
 void ui_proc_menu_readonly_common(const UIElement* element, UICommand command, int32_t encoder_step,
-    const char* label, uint16_t value_offset, bool redraw_value, const void* value, UIReadonlyFormat format, const char* fmt)
+    const char* label, uint16_t value_offset, bool redraw_value, const void* value, UIFormatValue format, const char* fmt)
 {
     // Draw label
     ui_draw_static_label(element, command, label, UI_COLOR_MENU_LABEL);
 
     if (redraw_value) {
-        char s[UI_MENU_VALUE_BUFFER_SIZE] = { '\0' };
-
-        if (format != NULL) {
-            format(s, ARRAY_SIZE(s), value, fmt);
-        }
-
-        ST7735_WriteStringNoWrap(element->x + value_offset * 7, element->y + 1, element->height - 1, s, Font_7x10, UI_COLOR_MENU_LABEL, UI_COLOR_BG);
+        ui_menu_custom_draw_value(element, value_offset, UI_COLOR_MENU_LABEL, value, format, fmt);
     }
 
     ui_default_element_proc(element, command, encoder_step);
 }
 
 void ui_proc_menu_readonly_custom_u32(const UIElement* element, UICommand command, int32_t encoder_step,
-    const char* label, uint32_t* ui_cache, uint32_t value, uint16_t value_offset, UIReadonlyFormat format, const char* format_param)
+    const char* label, uint32_t* ui_cache, uint32_t value, uint16_t value_offset, UIFormatValue format, const char* format_param)
 {
     bool redraw = (command & UICommand_Init) || (value != *ui_cache);
     if (redraw) {
@@ -251,7 +285,7 @@ void ui_proc_menu_readonly_custom_u32(const UIElement* element, UICommand comman
 }
 
 void ui_proc_menu_readonly_custom_i32(const UIElement* element, UICommand command, int32_t encoder_step,
-    const char* label, int32_t* ui_cache, int32_t value, uint16_t value_offset, UIReadonlyFormat format, const char* format_param)
+    const char* label, int32_t* ui_cache, int32_t value, uint16_t value_offset, UIFormatValue format, const char* format_param)
 {
     bool redraw = (command & UICommand_Init) || (value != *ui_cache);
     if (redraw) {
@@ -274,7 +308,7 @@ void ui_proc_menu_readonly_i32(const UIElement* element, UICommand command, int3
 }
 
 void ui_proc_menu_readonly_custom_u16(const UIElement* element, UICommand command, int32_t encoder_step,
-    const char* label, uint16_t* ui_cache, uint16_t value, uint16_t value_offset, UIReadonlyFormat format, const char* format_param)
+    const char* label, uint16_t* ui_cache, uint16_t value, uint16_t value_offset, UIFormatValue format, const char* format_param)
 {
     bool redraw = (command & UICommand_Init) || (value != *ui_cache);
     if (redraw) {
@@ -285,7 +319,7 @@ void ui_proc_menu_readonly_custom_u16(const UIElement* element, UICommand comman
 }
 
 void ui_proc_menu_readonly_custom_i16(const UIElement* element, UICommand command, int32_t encoder_step,
-    const char* label, int16_t* ui_cache, int16_t value, uint16_t value_offset, UIReadonlyFormat format, const char* format_param)
+    const char* label, int16_t* ui_cache, int16_t value, uint16_t value_offset, UIFormatValue format, const char* format_param)
 {
     bool redraw = (command & UICommand_Init) || (value != *ui_cache);
     if (redraw) {
@@ -322,6 +356,92 @@ void ui_menu_draw_right_aligned(const UIElement* element, uint32_t offset_chars,
     ST7735_WriteStringNoWrap(element->x + (UI_MENU_STR_LEN - len) * 7, element->y + 1, element->height - 1, str, Font_7x10, text_color, UI_COLOR_BG);
 }
 
+void ui_draw_coord_dd_right_aligned(const UIElement* element, int32_t coord_deg_x10M)
+{
+    char s[13] = { '\0' };
+
+    if (coord_deg_x10M != PPB_EMPTY_DEG_X10M_COORD) {
+        int32_t coord_abs   = (coord_deg_x10M < 0) ? -coord_deg_x10M : coord_deg_x10M;
+        int32_t coord_int   = coord_abs / 10000000;
+        int32_t coord_fract = coord_abs % 10000000;
+
+        const char* sign = (coord_deg_x10M < 0) ? "-" : "";
+        snprintf(s, ARRAY_SIZE(s), "%s%" PRIi32 ".%07" PRIi32, sign, coord_int, coord_fract);
+    }
+
+    uint16_t len    = (uint16_t)strlen(s);
+    uint16_t offset = UI_MENU_STR_LEN - len;
+
+    if (len < 12) {
+        uint16_t empty_chars = 12 - len;
+        ST7735_FillRectangle(element->x + 10 * 7, element->y + 1, empty_chars * 7, element->height - 1, UI_COLOR_BG);
+    }
+
+    ST7735_WriteStringNoWrap(element->x + offset * 7, element->y + 1, element->height - 1, s, Font_7x10, UI_COLOR_MENU_LABEL, UI_COLOR_BG);
+}
+
+void ui_draw_coord_ddm_right_aligned(const UIElement* element, const char* nmea_coord, char coord_ns_ew)
+{
+    char      min_str[20] = { 0 };
+    char      deg_buf[4]  = { '\0' };
+    char*     deg_str     = deg_buf;
+    size_t    min_len     = 0;
+    ptrdiff_t deg_len     = 0;
+
+    // Find the decimal point separating whole minutes and fractional minutes
+    const char* dot = strchr(nmea_coord, '.');
+    if (dot != NULL && (dot - nmea_coord >= 2)) {
+        // Minutes always occupy exactly two numeric characters immediately preceding the decimal point
+        const char* min_start = dot - 2;
+
+        // Format minutes and 'N/S'/'E/W' string
+        snprintf(min_str, ARRAY_SIZE(min_str), " %s' %c", min_start, coord_ns_ew);
+        min_len = strlen(min_str);
+
+        // Format degrees
+        deg_len = min_start - nmea_coord;
+        if (deg_len < (ptrdiff_t)ARRAY_SIZE(deg_buf)) {
+            strncpy(deg_str, nmea_coord, deg_len);
+            deg_str[deg_len] = '\0';
+
+            // Remove leading zeros
+            while ((*deg_str == '0') && (deg_len > 1)) {
+                ++deg_str;
+                --deg_len;
+            }
+        } else {
+            deg_len = 0;
+        }
+    }
+
+    // Draw minutes
+    uint16_t pos = UI_MENU_STR_LEN;
+    if (pos >= min_len && min_len > 0) {
+        pos -= min_len;
+        ST7735_WriteStringNoWrap(element->x + pos * 7, element->y + 1, element->height - 1, min_str, Font_7x10, UI_COLOR_MENU_LABEL, UI_COLOR_BG);
+    }
+
+    // Draw degrees
+    if (deg_len > 0) {
+        // Draw degree sign
+        if (pos >= 1) {
+            --pos;
+            ST7735_DrawImage(element->x + pos * 7, element->y + 1, 7, 10, icon_symbol_degree_7x10);
+        }
+
+        // Draw value
+        if (pos >= deg_len) {
+            pos -= deg_len;
+            ST7735_WriteStringNoWrap(element->x + pos * 7, element->y + 1, element->height - 1, deg_str, Font_7x10, UI_COLOR_MENU_LABEL, UI_COLOR_BG);
+        }
+    }
+
+    // Clear remaining space
+    if (pos > 0) {
+        ST7735_FillRectangle(element->x, element->y + 1, pos * 7, element->height - 1, UI_COLOR_BG);
+    }
+}
+
 void ui_proc_menu_readonly_cstr(const UIElement* element, UICommand command, int32_t encoder_step, const char* label, const char* value)
 {
     // Draw label
@@ -342,7 +462,7 @@ void ui_proc_menu_readonly_cstr(const UIElement* element, UICommand command, int
 
 void ui_proc_menu_edit_custom_u32(const UIElement* element, UICommand command, int32_t encoder_step,
     const char* label, uint32_t* ui_cache, uint32_t* ui_edit, volatile uint32_t* ee_setting, uint16_t value_offset,
-    void (*apply_value)(uint32_t), void (*change_value)(uint32_t*, int32_t), UIReadonlyFormat format, const char* format_param)
+    void (*apply_value)(uint32_t), void (*change_value)(uint32_t*, int32_t), UIFormatValue format, const char* format_param)
 {
     volatile const uint32_t *value_to_draw = NULL;
     bool is_captured = ui_is_captured(element);
@@ -394,16 +514,12 @@ void ui_proc_menu_edit_custom_u32(const UIElement* element, UICommand command, i
 
     // Draw value
     if (value_to_draw) {
+        uint32_t drawn_value = *value_to_draw;
         if (ui_cache != NULL) {
-            *ui_cache = *value_to_draw;
+            *ui_cache = drawn_value;
         }
 
-        char s[UI_MENU_VALUE_BUFFER_SIZE] = { '\0' };
-
-        if (format != NULL) {
-            format(s, ARRAY_SIZE(s), (const void*)value_to_draw, format_param);
-        }
-        ST7735_WriteStringNoWrap(element->x + value_offset * 7, element->y + 1, element->height - 1, s, Font_7x10, UI_COLOR_TEXT, UI_COLOR_BG);
+        ui_menu_custom_draw_value(element, value_offset, UI_COLOR_TEXT, (const void*)&drawn_value, format, format_param);
     }
 
     ui_default_element_proc(element, command, encoder_step);
@@ -551,4 +667,86 @@ void ui_proc_checkbox(const UIElement* element, UICommand command, int32_t encod
     }
 
     ui_default_element_proc(element, command, encoder_step);
+}
+
+//------------------------------------------------------------------------------
+// LCD Adjustment Patterns
+//------------------------------------------------------------------------------
+void ui_draw_lcd_adjust_vcom_pattern(const UIElement* element)
+{
+    uint16_t w = element->width;
+    uint16_t h = element->height;
+
+    uint16_t color_dark  = ST7735_CLR2MEM(UI_COLOR_VCOM_DARK);
+    uint16_t color_light = ST7735_CLR2MEM(UI_COLOR_VCOM_LIGHT);
+
+    uint16_t chunk_buf[BATCH_DRAW_STACK_BUF_SIZE];
+    uint16_t chunk_buf_idx = 0;
+
+    ST7735_Batch_Begin(element->x, element->y, w, h);
+    for (uint16_t y = 0; y < h; ++y) {
+        for (uint16_t x = 0; x < w; ++x) {
+            chunk_buf[chunk_buf_idx++] = ((x + y) & 1) ? color_dark : color_light;
+
+            // Flush chunk when buffer is full
+            if (chunk_buf_idx >= BATCH_DRAW_STACK_BUF_SIZE) {
+                ST7735_Batch_Draw(chunk_buf, BATCH_DRAW_STACK_BUF_SIZE);
+                chunk_buf_idx = 0;
+            }
+        }
+    }
+
+    // Flush remaining pixels at the end
+    if (chunk_buf_idx > 0) {
+        ST7735_Batch_Draw(chunk_buf, chunk_buf_idx);
+    }
+
+    ST7735_Batch_End();
+}
+
+void ui_draw_lcd_gamma_test_pattern(const UIElement* element)
+{
+    uint16_t w = element->width;
+    uint16_t h = element->height;
+
+    uint16_t chunk_buf[BATCH_DRAW_STACK_BUF_SIZE];
+
+    ST7735_Batch_Begin(element->x, element->y, w, h);
+    for (uint16_t y = 0; y < h; ++y) {
+        // Determine color mask based on vertical position
+        uint16_t mask = 0;
+        if (y < 10 || y >= 70) {
+            mask = 0xFFFF; // Grayscale
+        } else if (y < 20) {
+            mask = 0xF800; // Red
+        } else if (y < 30) {
+            mask = 0xFFE0; // Yellow
+        } else if (y < 40) {
+            mask = 0x07E0; // Green
+        } else if (y < 50) {
+            mask = 0x07FF; // Cyan
+        } else if (y < 60) {
+            mask = 0x001F; // Blue
+        } else {
+            mask = 0xF81F; // Magenta
+        }
+
+        // Draw horizontal gradient
+        uint16_t chunk_buf_idx = 0;
+        for (uint16_t x = 0; x < w; ++x) {
+            uint32_t t = (w > 1) ? (255U * x / (w - 1)) : 0;
+            chunk_buf[chunk_buf_idx++] = __REV16(ST7735_COLOR565(t, t, t) & mask);
+
+            if (chunk_buf_idx >= BATCH_DRAW_STACK_BUF_SIZE) {
+                ST7735_Batch_Draw(chunk_buf, BATCH_DRAW_STACK_BUF_SIZE);
+                chunk_buf_idx = 0;
+            }
+        }
+
+        if (chunk_buf_idx > 0) {
+            ST7735_Batch_Draw(chunk_buf, chunk_buf_idx);
+        }
+    }
+
+    ST7735_Batch_End();
 }

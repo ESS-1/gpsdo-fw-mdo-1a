@@ -700,13 +700,13 @@ static bool gps_add_pgdos_frame(uint8_t *buffer, size_t buffer_size, size_t *byt
         device_state,
         gps_state,
         device_uptime,
-        num_sats,
+        (unsigned int)num_sats,
         (uint32_t)frequency_ppb_x100,
         (uint32_t)frequency_get_inst_ppb_x100(),
         (uint16_t)TIM1->CCR2,
-        gps_sat_u8(gps_invalid_frames),
-        gps_sat_u8(gps_fifo_overflow_gps),
-        gps_sat_u8(gps_fifo_overflow_comm));
+        (unsigned int)gps_sat_u8(gps_invalid_frames),
+        (unsigned int)gps_sat_u8(gps_fifo_overflow_gps),
+        (unsigned int)gps_sat_u8(gps_fifo_overflow_comm));
 
     if (payload_len < 0 || (size_t)payload_len >= buffer_size) {
         return false;
