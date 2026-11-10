@@ -2215,7 +2215,7 @@ static void ui_change_calibration_vref(int8_t* value, int32_t step)
 
     // Apply calibration immediately
     ee_storage.calibration.adc_adj_vrefint_mv = *value;
-}
+    ee_is_changed = true;}
 
 static void ui_proc_calibration_vref(const UIElement* element, UICommand command, int32_t encoder_step)
 {
@@ -2232,6 +2232,7 @@ static void ui_change_calibration_vusb(int8_t* value, int32_t step)
 
     // Apply calibration immediately
     ee_storage.calibration.adc_adj_vusb_div_ratio = *value;
+    ee_is_changed = true;
 }
 
 static void ui_proc_calibration_vusb(const UIElement* element, UICommand command, int32_t encoder_step)
@@ -2249,6 +2250,7 @@ static void ui_change_calibration_t_ofs(int8_t* value, int32_t step)
 
     // Apply calibration immediately
     ee_storage.calibration.adc_adj_temp_v25_mv = *value;
+    ee_is_changed = true;
 }
 
 static void ui_proc_calibration_t_ofs(const UIElement* element, UICommand command, int32_t encoder_step)
@@ -2266,6 +2268,7 @@ static void ui_change_calibration_t_slp(int8_t* value, int32_t step)
 
     // Apply calibration immediately
     ee_storage.calibration.adc_adj_temp_slope = *value;
+    ee_is_changed = true;
 }
 
 static void ui_proc_calibration_t_slp(const UIElement* element, UICommand command, int32_t encoder_step)
