@@ -233,6 +233,11 @@ int32_t ui_get_adaptive_step(uint32_t value, int32_t encoder_step)
 //------------------------------------------------------------------------------
 // Standard Element Procedures
 //------------------------------------------------------------------------------
+void ui_format_i8(char* buf, size_t buf_char_count, const void* value, const char* fmt)
+{
+    snprintf(buf, buf_char_count, fmt, (unsigned int)*(const int8_t*)value);
+}
+
 void ui_format_u16(char* buf, size_t buf_char_count, const void* value, const char* fmt)
 {
     snprintf(buf, buf_char_count, fmt, *(const uint16_t*)value);
@@ -458,6 +463,80 @@ void ui_proc_menu_readonly_cstr(const UIElement* element, UICommand command, int
     }
 
     ui_default_element_proc(element, command, encoder_step);
+}
+
+void ui_proc_menu_edit_custom_i8(const UIElement* element, UICommand command, int32_t encoder_step,
+    const char* label, int8_t* ui_cache, int8_t* ui_edit, volatile int8_t* ee_setting, uint16_t value_offset,
+    void (*apply_value)(int8_t), void (*change_value)(int8_t*, int32_t), UIFormatValue format, const char* format_param)
+{
+    volatile const int8_t *value_to_draw = NULL;
+    bool is_captured = ui_is_captured(element);
+
+    if (command & UICommand_Release) {
+        // Apply changes
+        if (*ee_setting != *ui_edit) {
+            *ee_setting = *ui_edit;
+            ee_is_changed = true;
+
+            if (apply_value != NULL) {
+                apply_value(*ui_edit);
+            }
+        }
+    }
+
+    // Draw label
+    ui_draw_static_label(element, command, label, UI_COLOR_MENU_LABEL);
+
+    if (command & UICommand_Init) {
+        // Draw value
+        if (!is_captured) {
+            value_to_draw = ee_setting;
+        } else {
+            value_to_draw = ui_edit;
+        }
+    }
+
+    if ((ui_cache != NULL) && !is_captured && (*ee_setting != *ui_cache)) {
+        value_to_draw = ee_setting;
+    }
+
+    // Value edit
+    {
+        if (command & UICommand_Capture) {
+            *ui_edit = *ee_setting;
+        }
+
+        if (command & UICommand_EncoderStep) {
+            // Modify setting
+            if (change_value != NULL) {
+                change_value(ui_edit, encoder_step);
+            }
+
+            // Draw new value
+            value_to_draw = ui_edit;
+        }
+    }
+
+    // Draw value
+    if (value_to_draw) {
+        int8_t drawn_value = *value_to_draw;
+        if (ui_cache != NULL) {
+            *ui_cache = drawn_value;
+        }
+
+        ui_menu_custom_draw_value(element, value_offset, UI_COLOR_TEXT, (const void*)&drawn_value, format, format_param);
+    }
+
+    ui_default_element_proc(element, command, encoder_step);
+}
+
+void ui_proc_menu_edit_i8(const UIElement* element, UICommand command, int32_t encoder_step,
+    const char* label, int8_t* ui_cache, int8_t* ui_edit, volatile int8_t* ee_setting, uint16_t value_offset,
+    const char* fmt, void (*apply_value)(int8_t), void (*change_value)(int8_t*, int32_t))
+{
+    ui_proc_menu_edit_custom_i8(element, command, encoder_step,
+        label, ui_cache, ui_edit, ee_setting, value_offset,
+        apply_value, change_value, ui_format_i8, fmt);
 }
 
 void ui_proc_menu_edit_custom_u32(const UIElement* element, UICommand command, int32_t encoder_step,

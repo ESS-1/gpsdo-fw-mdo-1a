@@ -28,8 +28,8 @@
 void ui_format_ppb_5char(int32_t ppb_signed, char* buffer, size_t bufferSize);
 void ui_format_ppb_9char(int32_t ppb_signed, char* buffer, size_t bufferSize);
 const char* ui_get_month_name_3char(uint8_t month_num);
-void ui_format_adc_voltage_fp2i3f_8char(char* buf, size_t buf_char_count, const void* value, const char*);
-void ui_format_adc_temperature_fp3i1f_5char(char* buf, size_t buf_char_count, const void* value, const char*);
+void ui_format_adc_voltage_fp2i3f_u16_8char(char* buf, size_t buf_char_count, const void* value, const char*);
+void ui_format_adc_temperature_fp3i1f_i16_5char(char* buf, size_t buf_char_count, const void* value, const char*);
 
 //------------------------------------------------------------------------------
 // Setting Change Functions
@@ -47,6 +47,7 @@ int32_t ui_get_adaptive_step(uint32_t value, int32_t encoder_step);
 //------------------------------------------------------------------------------
 typedef void (*UIFormatValue)(char* buf, size_t buf_char_count, const void* value, const char* format_param);
 
+void ui_format_i8(char* buf, size_t buf_char_count, const void* value, const char* fmt);
 void ui_format_u16(char* buf, size_t buf_char_count, const void* value, const char* fmt);
 void ui_format_u32(char* buf, size_t buf_char_count, const void* value, const char* fmt);
 void ui_format_i32(char* buf, size_t buf_char_count, const void* value, const char* fmt);
@@ -72,6 +73,12 @@ void ui_draw_coord_dd_right_aligned(const UIElement* element, int32_t coord_deg_
 void ui_draw_coord_ddm_right_aligned(const UIElement* element, const char* nmea_coord, char coord_ns_ew);
 
 void ui_proc_menu_readonly_cstr(const UIElement* element, UICommand command, int32_t encoder_step, const char* label, const char* value);
+void ui_proc_menu_edit_custom_i8(const UIElement* element, UICommand command, int32_t encoder_step,
+    const char* label, int8_t* ui_cache, int8_t* ui_edit, volatile int8_t* ee_setting, uint16_t value_offset,
+    void (*apply_value)(int8_t), void (*change_value)(int8_t*, int32_t), UIFormatValue format, const char* format_param);
+void ui_proc_menu_edit_i8(const UIElement* element, UICommand command, int32_t encoder_step,
+    const char* label, int8_t* ui_cache, int8_t* ui_edit, volatile int8_t* ee_setting, uint16_t value_offset,
+    const char* fmt, void (*apply_value)(int8_t), void (*change_value)(int8_t*, int32_t));
 void ui_proc_menu_edit_custom_u32(const UIElement* element, UICommand command, int32_t encoder_step,
     const char* label, uint32_t* ui_cache, uint32_t* ui_edit, volatile uint32_t* ee_setting, uint16_t value_offset,
     void (*apply_value)(uint32_t), void (*change_value)(uint32_t*, int32_t), UIFormatValue format, const char* format_param);

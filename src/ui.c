@@ -284,6 +284,11 @@ static UIScreen ui_main_menu_screen_page4 = {
 // Header
 static void ui_proc_calibration_label(const UIElement* element, UICommand command, int32_t encoder_step);
 // Page
+static void ui_proc_calibration_vref(const UIElement* element, UICommand command, int32_t encoder_step);
+static void ui_proc_calibration_vusb(const UIElement* element, UICommand command, int32_t encoder_step);
+static void ui_proc_calibration_t_ofs(const UIElement* element, UICommand command, int32_t encoder_step);
+static void ui_proc_calibration_t_slp(const UIElement* element, UICommand command, int32_t encoder_step);
+static void ui_proc_calibration_monitor(const UIElement* element, UICommand command, int32_t encoder_step);
 static void ui_proc_calibration_restore_defaults(const UIElement* element, UICommand command, int32_t encoder_step);
 
 static const UIElement ui_calibration_screen_elements[] = {
@@ -291,7 +296,12 @@ static const UIElement ui_calibration_screen_elements[] = {
     { 1,  1, 15, 16, UI_STYLE_FOCUSABLE, ui_proc_back_to_main      },
     { 27, 6, 84, 10, UI_STYLE_NONE,      ui_proc_calibration_label },
     // Content
-    { 1, 68, 154, 11, UI_STYLE_FOCUSABLE, ui_proc_calibration_restore_defaults },
+    { 1,  20, 70,  11, UI_STYLE_FOCUSABLE | UI_STYLE_INPUT_CAPTURING, ui_proc_calibration_vref             },
+    { 85, 20, 70,  11, UI_STYLE_FOCUSABLE | UI_STYLE_INPUT_CAPTURING, ui_proc_calibration_vusb             },
+    { 1,  32, 70,  11, UI_STYLE_FOCUSABLE | UI_STYLE_INPUT_CAPTURING, ui_proc_calibration_t_ofs            },
+    { 85, 32, 70,  11, UI_STYLE_FOCUSABLE | UI_STYLE_INPUT_CAPTURING, ui_proc_calibration_t_slp            },
+    { 1,  50, 154, 11, UI_STYLE_NONE,                                 ui_proc_calibration_monitor          },
+    { 1,  68, 154, 11, UI_STYLE_FOCUSABLE,                            ui_proc_calibration_restore_defaults },
 };
 
 UIScreen ui_calibration_screen = {
@@ -2053,31 +2063,46 @@ static void ui_proc_main_menu_update_fw(const UIElement* element, UICommand comm
     ui_proc_menu_link(element, command, encoder_step, "> Update Firmware...", &ui_update_fw_screen);
 }
 
+static void ui_proc_main_menu_vusb_impl(const UIElement* element, UICommand command, int32_t encoder_step, uint16_t* ui_cache)
+{
+    ui_proc_menu_readonly_custom_u16(element, command, encoder_step, "Vusb:",
+        ui_cache, adc_mon_vusb_mv, 14, ui_format_adc_voltage_fp2i3f_u16_8char, NULL);
+}
+
 static void ui_proc_main_menu_vusb(const UIElement* element, UICommand command, int32_t encoder_step)
 {
     static uint16_t ui_cache_adc_mon_vusb_mv = ADC_MON_VOLTAGE_NO_DATA;
-    ui_proc_menu_readonly_custom_u16(element, command, encoder_step, "Vusb:",
-        &ui_cache_adc_mon_vusb_mv, adc_mon_vusb_mv, 14, ui_format_adc_voltage_fp2i3f_u16_8char, NULL);
+    ui_proc_main_menu_vusb_impl(element, command, encoder_step, &ui_cache_adc_mon_vusb_mv);
+}
+
+static void ui_proc_main_menu_vdd_impl(const UIElement* element, UICommand command, int32_t encoder_step, uint16_t* ui_cache)
+{
+    ui_proc_menu_readonly_custom_u16(element, command, encoder_step, "Vdd (3.3V):",
+        ui_cache, adc_mon_vdda_mv, 14, ui_format_adc_voltage_fp2i3f_u16_8char, NULL);
 }
 
 static void ui_proc_main_menu_vdd(const UIElement* element, UICommand command, int32_t encoder_step)
 {
     static uint16_t ui_cache_adc_mon_vdda_mv = ADC_MON_VOLTAGE_NO_DATA;
-    ui_proc_menu_readonly_custom_u16(element, command, encoder_step, "Vdd (3.3V):",
-        &ui_cache_adc_mon_vdda_mv, adc_mon_vdda_mv, 14, ui_format_adc_voltage_fp2i3f_u16_8char, NULL);
+    ui_proc_main_menu_vdd_impl(element, command, encoder_step, &ui_cache_adc_mon_vdda_mv);
 }
 
-static void ui_proc_main_menu_temp(const UIElement* element, UICommand command, int32_t encoder_step)
+static void ui_proc_main_menu_temp_impl(const UIElement* element, UICommand command, int32_t encoder_step, int16_t* ui_cache)
 {
-    static int16_t ui_cache_adc_mon_temp_deci_c = ADC_MON_TEMP_NO_DATA;
     ui_proc_menu_readonly_custom_i16(element, command, encoder_step, "MCU Temp.:",
-        &ui_cache_adc_mon_temp_deci_c, adc_mon_temp_deci_c, 14, ui_format_adc_temperature_fp3i1f_i16_5char, NULL);
+        ui_cache, adc_mon_temp_deci_c, 14, ui_format_adc_temperature_fp3i1f_i16_5char, NULL);
 
     if (command & UICommand_Init) {
         // Draw degree sign and "C"
         ST7735_DrawImage(element->x + 20 * 7, element->y + 1, 7, 10, icon_symbol_degree_7x10);
         ST7735_WriteStringNoWrap(element->x + 21 * 7, element->y + 1, element->height - 1, "C", Font_7x10, UI_COLOR_MENU_LABEL, UI_COLOR_BG);
     }
+}
+
+static void ui_proc_main_menu_temp(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    static int16_t ui_cache_adc_mon_temp_deci_c = ADC_MON_TEMP_NO_DATA;
+    ui_proc_main_menu_temp_impl(element, command, encoder_step, &ui_cache_adc_mon_temp_deci_c);
 }
 
 static void ui_proc_main_menu_calibrate(const UIElement* element, UICommand command, int32_t encoder_step)
@@ -2182,6 +2207,113 @@ static void ui_proc_main_menu_mcu_flash(const UIElement* element, UICommand comm
 static void ui_proc_calibration_label(const UIElement* element, UICommand command, int32_t encoder_step)
 {
     ui_proc_menu_label(element, command, encoder_step, "Calibration");
+}
+
+static void ui_change_calibration_vref(int8_t* value, int32_t step)
+{
+    ui_change_setting_i8(value, step, ADC_MON_CAL_VREFINT_ADJ_MIN, ADC_MON_CAL_VREFINT_ADJ_MAX, false);
+
+    // Apply calibration immediately
+    ee_storage.calibration.adc_adj_vrefint_mv = *value;
+}
+
+static void ui_proc_calibration_vref(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    static int8_t ui_cache_calibration_vref = 0;
+    static int8_t ui_edit_calibration_vref  = 0;
+    ui_proc_menu_edit_i8(element, command, encoder_step, "Vref:",
+        &ui_cache_calibration_vref, &ui_edit_calibration_vref, &(ee_storage.calibration.adc_adj_vrefint_mv), 5, "%4d",
+        NULL, ui_change_calibration_vref);
+}
+
+static void ui_change_calibration_vusb(int8_t* value, int32_t step)
+{
+    ui_change_setting_i8(value, step, ADC_MON_CAL_VUSB_DIV_ADJ_MIN, ADC_MON_CAL_VUSB_DIV_ADJ_MAX, false);
+
+    // Apply calibration immediately
+    ee_storage.calibration.adc_adj_vusb_div_ratio = *value;
+}
+
+static void ui_proc_calibration_vusb(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    static int8_t ui_cache_calibration_vusb = 0;
+    static int8_t ui_edit_calibration_vusb  = 0;
+    ui_proc_menu_edit_i8(element, command, encoder_step, "Vusb:",
+        &ui_cache_calibration_vusb, &ui_edit_calibration_vusb, &(ee_storage.calibration.adc_adj_vusb_div_ratio), 5, "%4d",
+        NULL, ui_change_calibration_vusb);
+}
+
+static void ui_change_calibration_t_ofs(int8_t* value, int32_t step)
+{
+    ui_change_setting_i8(value, step, ADC_MON_CAL_TEMP_V25_ADJ_MIN, ADC_MON_CAL_TEMP_V25_ADJ_MAX, false);
+
+    // Apply calibration immediately
+    ee_storage.calibration.adc_adj_temp_v25_mv = *value;
+}
+
+static void ui_proc_calibration_t_ofs(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    static int8_t ui_cache_calibration_t_ofs = 0;
+    static int8_t ui_edit_calibration_t_ofs  = 0;
+    ui_proc_menu_edit_i8(element, command, encoder_step, "T OFS:",
+        &ui_cache_calibration_t_ofs, &ui_edit_calibration_t_ofs, &(ee_storage.calibration.adc_adj_temp_v25_mv), 5, "%4d",
+        NULL, ui_change_calibration_t_ofs);
+}
+
+static void ui_change_calibration_t_slp(int8_t* value, int32_t step)
+{
+    ui_change_setting_i8(value, step, ADC_MON_CAL_TEMP_SLOPE_ADJ_MIN, ADC_MON_CAL_TEMP_SLOPE_ADJ_MAX, false);
+
+    // Apply calibration immediately
+    ee_storage.calibration.adc_adj_temp_slope = *value;
+}
+
+static void ui_proc_calibration_t_slp(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    static int8_t ui_cache_calibration_t_slp = 0;
+    static int8_t ui_edit_calibration_t_slp  = 0;
+    ui_proc_menu_edit_i8(element, command, encoder_step, "T SLP:",
+        &ui_cache_calibration_t_slp, &ui_edit_calibration_t_slp, &(ee_storage.calibration.adc_adj_temp_slope), 5, "%4d",
+        NULL, ui_change_calibration_t_slp);
+}
+
+static void ui_proc_calibration_monitor(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    static const UIElement* ui_cache_active_element = NULL;
+    static union {
+        uint16_t vusb_mv;
+        uint16_t vdda_mv;
+        int16_t  temp_deci_c;
+    } ui_cache_adc_mon = { 0 };
+
+    // Get active screen
+    const UIScreen*  screen = ui_get_active_screen();
+    const UIElement* active_element = screen ? screen->focused_element : NULL;
+
+    UICommand subproc_cmd = command;
+
+    if ((command & UICommand_Init) || (active_element != ui_cache_active_element)) {
+        ui_cache_active_element = active_element;
+        subproc_cmd |= UICommand_Init;
+
+        // Erase background
+        ST7735_FillRectangle(element->x, element->y, element->width, element->height, UI_COLOR_BG);
+    }
+
+    // Run appropriate element proc
+    if (active_element != NULL) {
+        if (active_element->proc == ui_proc_calibration_vref) {
+            ui_proc_main_menu_vdd_impl(element, subproc_cmd, encoder_step, &(ui_cache_adc_mon.vdda_mv));
+        } else if (active_element->proc == ui_proc_calibration_vusb) {
+            ui_proc_main_menu_vusb_impl(element, subproc_cmd, encoder_step, &(ui_cache_adc_mon.vusb_mv));
+        } else if ((active_element->proc == ui_proc_calibration_t_ofs) || (active_element->proc == ui_proc_calibration_t_slp)) {
+            ui_proc_main_menu_temp_impl(element, subproc_cmd, encoder_step, &(ui_cache_adc_mon.temp_deci_c));
+        } else {
+            ui_default_element_proc(element, command, encoder_step);
+        }
+    } else {
+        ui_default_element_proc(element, command, encoder_step);
+    }
 }
 
 static void ui_reset_calibration_handler(UI_MsgBoxButton result)

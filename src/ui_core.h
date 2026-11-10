@@ -59,7 +59,7 @@ typedef enum {
 
 
 struct UIElement;
-typedef void (*UI_ElementProc)(const struct UIElement* element, UICommand command, int32_t encoder_step);
+typedef void (*UIElementProc)(const struct UIElement* element, UICommand command, int32_t encoder_step);
 
 typedef struct UIElement {
     const uint16_t x;
@@ -67,8 +67,8 @@ typedef struct UIElement {
     const uint16_t width;
     const uint16_t height;
 
-    const uint16_t       styles;
-    const UI_ElementProc proc;
+    const uint16_t      styles;
+    const UIElementProc proc;
 } UIElement;
 
 typedef struct {
