@@ -1144,7 +1144,8 @@ static void ui_proc_status_show_status()
 static void ui_proc_status(const UIElement* element, UICommand command, int32_t encoder_step)
 {
     static uint32_t ui_cache_warmup_remaining_sec = UINT16_MAX;
-    static bool     ui_cache_pll_status_error     = false;
+    static bool     ui_cache_status_error         = false;
+    static bool     ui_cache_status_warning       = false;
 
     bool draw_icon = false;
     bool draw_timer = false;
@@ -1153,10 +1154,13 @@ static void ui_proc_status(const UIElement* element, UICommand command, int32_t 
         draw_timer = true;
     }
 
-    bool pll_status_error = (pll_status != PllStatus_Ok);
-    if (pll_status_error != ui_cache_pll_status_error) {
-        ui_cache_pll_status_error = pll_status_error;
-        draw_icon = true;
+    bool status_error = (pll_status != PllStatus_Ok);
+    bool status_warning = (adc_mon_status != AdcMonStatus_Ok);
+
+    if ((status_error != ui_cache_status_error) || (status_warning != ui_cache_status_warning)) {
+        ui_cache_status_error   = status_error;
+        ui_cache_status_warning = status_warning;
+        draw_icon               = true;
     }
 
     if (ui_cache_warmup_remaining_sec > 0) {
@@ -1177,14 +1181,18 @@ static void ui_proc_status(const UIElement* element, UICommand command, int32_t 
     // Draw icon
     if (draw_icon) {
         if (ui_cache_warmup_remaining_sec > 0) {
-            if (ui_cache_pll_status_error) {
+            if (ui_cache_status_error) {
                 ST7735_DrawImage(element->x + 1, element->y, 15, 12, icon_status_err_warmup_15x12);
+            } else if (ui_cache_status_warning) {
+                ST7735_DrawImage(element->x + 1, element->y, 15, 12, icon_status_warn_warmup_15x12);
             } else {
                 ST7735_DrawImage(element->x + 1, element->y, 15, 12, icon_status_ok_warmup_15x12);
             }
         } else {
-            if (ui_cache_pll_status_error) {
+            if (ui_cache_status_error) {
                 ST7735_DrawImage(element->x + 1, element->y, 15, 12, icon_status_err_15x12);
+            } else if (ui_cache_status_warning) {
+                ST7735_DrawImage(element->x + 1, element->y, 15, 12, icon_status_warn_15x12);
             } else {
                 ST7735_DrawImage(element->x + 1, element->y, 15, 12, icon_status_ok_15x12);
             }
@@ -1209,11 +1217,13 @@ static void ui_proc_status(const UIElement* element, UICommand command, int32_t 
             } else {
                 ST7735_FillRectangle(element->x, element->y + 13, 5, 7, UI_COLOR_BG);
             }
+
             if (digit1 > 0 || digit2 > 0) {
                 ST7735_DrawImage(element->x + 5 + 1, element->y + 13, 5, 7, icon_digits_0_9_5x7[digit2]);
             } else {
                 ST7735_FillRectangle(element->x + 5 + 1, element->y + 13, 5, 7, UI_COLOR_BG);
             }
+
             ST7735_DrawImage(element->x + 2 * (5 + 1), element->y + 13, 5, 7, icon_digits_0_9_5x7[digit3]);
         } else {
             ST7735_FillRectangle(element->x, element->y + 13, 5 + 1 + 5 + 1 + 5, 7, UI_COLOR_BG);

@@ -17,6 +17,8 @@ extern const uint16_t icon_save_inactive_15x16[];
 extern const uint16_t icon_back_15x16[];
 extern const uint16_t icon_status_ok_15x12[];
 extern const uint16_t icon_status_ok_warmup_15x12[];
+extern const uint16_t icon_status_warn_15x12[];
+extern const uint16_t icon_status_warn_warmup_15x12[];
 extern const uint16_t icon_status_err_15x12[];
 extern const uint16_t icon_status_err_warmup_15x12[];
 extern const uint16_t icon_out_2ma_7x10[];

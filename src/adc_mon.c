@@ -13,6 +13,8 @@
 #define ADC_MON_CAL_TEMP_V25_NOM     1430
 #define ADC_MON_CAL_TEMP_SLOPE_NOM   430
 
+AdcMonStatus adc_mon_status = AdcMonStatus_Ok;
+
 static bool     adc_mon_is_idle          = true;
 static uint32_t adc_mon_last_measurement = 0;
 static uint32_t adc_mon_last_calibration = 0;
@@ -25,6 +27,23 @@ volatile int16_t  adc_mon_temp_deci_c = ADC_MON_TEMP_NO_DATA;    // Temperature 
 static void adc_mon_calibrate(void)
 {
     HAL_ADCEx_Calibration_Start(&hadc1);
+}
+
+static void adc_mon_update_status(void)
+{
+    AdcMonStatus new_status = AdcMonStatus_Ok;
+
+    if (adc_mon_vusb_mv < ADC_MON_VUSB_MIN_MV) {
+        new_status |= AdcMonStatus_Vusb_Low;
+    } else if (adc_mon_vusb_mv > ADC_MON_VUSB_MAX_MV) {
+        new_status |= AdcMonStatus_Vusb_High;
+    }
+
+    if (adc_mon_temp_deci_c > ADC_MON_TEMP_MAX_DECI_C) {
+        new_status |= AdcMonStatus_Overheat;
+    }
+
+    adc_mon_status = new_status;
 }
 
 static void adc_mon_update_measurements(void)
@@ -58,6 +77,9 @@ static void adc_mon_update_measurements(void)
     int32_t t_v25       = (int32_t)ADC_MON_CAL_TEMP_V25_NOM + (int32_t)ee_storage.calibration.adc_adj_temp_v25_mv;
     int32_t t_slope     = (int32_t)ADC_MON_CAL_TEMP_SLOPE_NOM + (int32_t)ee_storage.calibration.adc_adj_temp_slope;
     adc_mon_temp_deci_c = (int16_t)((((t_v25 * 10 - temp_mv_x10) * 100 + (t_slope / 2)) / t_slope) + 250);
+
+    // Update status
+    adc_mon_update_status();
 }
 
 void adc_mon_init(void)
