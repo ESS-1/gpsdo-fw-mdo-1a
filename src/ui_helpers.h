@@ -31,6 +31,7 @@ const char* ui_get_month_name_3char(uint8_t month_num);
 void ui_format_adc_voltage_fp2i3f_u16_8char(char* buf, size_t buf_char_count, const void* value, const char*);
 void ui_format_adc_temperature_fp3i1f_i16_5char(char* buf, size_t buf_char_count, const void* value, const char*);
 
+
 //------------------------------------------------------------------------------
 // Setting Change Functions
 //------------------------------------------------------------------------------
@@ -41,6 +42,26 @@ void ui_change_setting_u32(uint32_t* value, int32_t step, uint32_t min, uint32_t
 
 int32_t ui_limit_i32(int32_t value, int32_t min, int32_t max);
 int32_t ui_get_adaptive_step(uint32_t value, int32_t encoder_step);
+
+
+//------------------------------------------------------------------------------
+// Common Elements
+//------------------------------------------------------------------------------
+void ui_proc_label_page_1of2(const UIElement* element, UICommand command, int32_t encoder_step);
+void ui_proc_label_page_2of2(const UIElement* element, UICommand command, int32_t encoder_step);
+void ui_proc_label_page_1of3(const UIElement* element, UICommand command, int32_t encoder_step);
+void ui_proc_label_page_2of3(const UIElement* element, UICommand command, int32_t encoder_step);
+void ui_proc_label_page_3of3(const UIElement* element, UICommand command, int32_t encoder_step);
+void ui_proc_label_page_1of4(const UIElement* element, UICommand command, int32_t encoder_step);
+void ui_proc_label_page_2of4(const UIElement* element, UICommand command, int32_t encoder_step);
+void ui_proc_label_page_3of4(const UIElement* element, UICommand command, int32_t encoder_step);
+void ui_proc_label_page_4of4(const UIElement* element, UICommand command, int32_t encoder_step);
+void ui_proc_label_page_1of5(const UIElement* element, UICommand command, int32_t encoder_step);
+void ui_proc_label_page_2of5(const UIElement* element, UICommand command, int32_t encoder_step);
+void ui_proc_label_page_3of5(const UIElement* element, UICommand command, int32_t encoder_step);
+void ui_proc_label_page_4of5(const UIElement* element, UICommand command, int32_t encoder_step);
+void ui_proc_label_page_5of5(const UIElement* element, UICommand command, int32_t encoder_step);
+
 
 //------------------------------------------------------------------------------
 // Standard Element Procedures
@@ -101,6 +122,7 @@ void ui_proc_menu_page_left_inactive(const UIElement* element, UICommand command
 void ui_proc_menu_page_right_inactive(const UIElement* element, UICommand command, int32_t encoder_step);
 void ui_proc_checkbox(const UIElement* element, UICommand command, int32_t encoder_step, const char* label,
     volatile uint8_t* setting, bool is_eeprom_setting);
+
 
 //------------------------------------------------------------------------------
 // LCD Adjustment Patterns

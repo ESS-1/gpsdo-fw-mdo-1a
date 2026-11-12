@@ -9,8 +9,8 @@
 #include <memory.h>
 #include <stdio.h>
 
-
 #define UI_MENU_VALUE_BUFFER_SIZE (UI_MENU_STR_LEN+1)
+
 
 //------------------------------------------------------------------------------
 // Formatting Functions
@@ -227,6 +227,80 @@ int32_t ui_get_adaptive_step(uint32_t value, int32_t encoder_step)
     } else {
         return 5 * sign * scale;
     }
+}
+
+
+//------------------------------------------------------------------------------
+// Common Elements
+//------------------------------------------------------------------------------
+void ui_proc_label_page_1of2(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    ui_proc_menu_label(element, command, encoder_step, "1/2");
+}
+
+void ui_proc_label_page_2of2(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    ui_proc_menu_label(element, command, encoder_step, "2/2");
+}
+
+void ui_proc_label_page_1of3(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    ui_proc_menu_label(element, command, encoder_step, "1/3");
+}
+
+void ui_proc_label_page_2of3(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    ui_proc_menu_label(element, command, encoder_step, "2/3");
+}
+
+void ui_proc_label_page_3of3(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    ui_proc_menu_label(element, command, encoder_step, "3/3");
+}
+
+void ui_proc_label_page_1of4(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    ui_proc_menu_label(element, command, encoder_step, "1/4");
+}
+
+void ui_proc_label_page_2of4(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    ui_proc_menu_label(element, command, encoder_step, "2/4");
+}
+
+void ui_proc_label_page_3of4(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    ui_proc_menu_label(element, command, encoder_step, "3/4");
+}
+
+void ui_proc_label_page_4of4(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    ui_proc_menu_label(element, command, encoder_step, "4/4");
+}
+
+void ui_proc_label_page_1of5(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    ui_proc_menu_label(element, command, encoder_step, "1/5");
+}
+
+void ui_proc_label_page_2of5(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    ui_proc_menu_label(element, command, encoder_step, "2/5");
+}
+
+void ui_proc_label_page_3of5(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    ui_proc_menu_label(element, command, encoder_step, "3/5");
+}
+
+void ui_proc_label_page_4of5(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    ui_proc_menu_label(element, command, encoder_step, "4/5");
+}
+
+void ui_proc_label_page_5of5(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    ui_proc_menu_label(element, command, encoder_step, "5/5");
 }
 
 
@@ -747,6 +821,7 @@ void ui_proc_checkbox(const UIElement* element, UICommand command, int32_t encod
 
     ui_default_element_proc(element, command, encoder_step);
 }
+
 
 //------------------------------------------------------------------------------
 // LCD Adjustment Patterns
