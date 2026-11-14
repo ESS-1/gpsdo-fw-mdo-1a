@@ -1008,7 +1008,7 @@ static void ui_proc_usb(const UIElement* element, UICommand command, int32_t enc
         case CDC_STATUS_OK:
             {
                 static const char* const msg[] = {
-                    "USB connected",
+                    "USB connected.",
                     NULL };
                 ui_msgbox(msg, UI_MsgBoxType_Ok, UI_MsgBoxButton_Ok, NULL);
             }
@@ -1017,9 +1017,9 @@ static void ui_proc_usb(const UIElement* element, UICommand command, int32_t enc
         case CDC_STATUS_OVERFLOW:
             {
                 static const char* const msg[] = {
-                    "USB connected",
+                    "USB connected.",
                     "PC software is not",
-                    "running",
+                    "running.",
                     NULL };
                 ui_msgbox(msg, UI_MsgBoxType_Ok, UI_MsgBoxButton_Ok, NULL);
             }
@@ -1029,7 +1029,7 @@ static void ui_proc_usb(const UIElement* element, UICommand command, int32_t enc
         default:
             {
                 static const char* const msg[] = {
-                    "No USB connection",
+                    "No USB connection.",
                     NULL };
                 ui_msgbox(msg, UI_MsgBoxType_Ok, UI_MsgBoxButton_Ok, NULL);
             }
@@ -1104,7 +1104,7 @@ static void ui_proc_datetime(const UIElement* element, UICommand command, int32_
     {
         if (command & (UICommand_Capture | UICommand_RestoreCapture)) {
             // Draw label and erase the remaining element area
-            ST7735_WriteStringNoWrap(element->x, element->y + 1, element->height - 1, "Time offset: ", Font_7x10, UI_COLOR_TEXT, UI_COLOR_BG);
+            ST7735_WriteStringNoWrap(element->x, element->y + 1, element->height - 1, "Time Offset: ", Font_7x10, UI_COLOR_TEXT, UI_COLOR_BG);
             ST7735_FillRectangle(element->x + 13 * 7, element->y + 1, 7*7, element->height, UI_COLOR_BG);
         }
 
@@ -1463,7 +1463,7 @@ static void ui_proc_pwm(const UIElement* element, UICommand command, int32_t enc
 
         static const char* const msg[] = {
             "The PWM value has",
-            "been set",
+            "been set.",
             NULL };
         ui_msgbox(msg, UI_MsgBoxType_Ok, UI_MsgBoxButton_Ok, NULL);
     }
@@ -2306,7 +2306,7 @@ static void ui_proc_main_menu_bootloader_version(const UIElement* element, UICom
 
 static void ui_proc_main_menu_mcu_flash(const UIElement* element, UICommand command, int32_t encoder_step)
 {
-    ui_proc_menu_readonly_common(element, command, encoder_step, "MCU FLASH:", 14, (command & UICommand_Init),
+    ui_proc_menu_readonly_common(element, command, encoder_step, "MCU Flash:", 14, (command & UICommand_Init),
         (uint16_t*)FLASHSIZE_BASE, ui_format_u16, "%5" PRIu16 " KB");
 }
 
@@ -2436,7 +2436,11 @@ static void ui_reset_calibration_handler(UI_MsgBoxButton result)
         // Restore defaults
         load_calibration(true);
 
-        static const char* const msg[] = { "Calibration reset.", "Save in main menu", "to keep changes.", NULL };
+        static const char* const msg[] = {
+            "Calibration reset.",
+            "Save in main menu",
+            "to keep changes.",
+            NULL };
         ui_msgbox(msg, UI_MsgBoxType_Ok, UI_MsgBoxButton_Ok, NULL);
     }
 }
@@ -2447,7 +2451,11 @@ static void ui_proc_calibration_restore_defaults(const UIElement* element, UICom
     ui_draw_static_label(element, command, "> Reset Calibration", UI_COLOR_LINK);
 
     if (command & UICommand_Click) {
-        static const char* const msg[] = { "Reset ADC monitor", "calibration to", "defaults?", NULL };
+        static const char* const msg[] = {
+            "Reset ADC monitor",
+            "calibration to",
+            "defaults?",
+            NULL };
         ui_msgbox(msg, UI_MsgBoxType_YesNo, UI_MsgBoxButton_No, ui_reset_calibration_handler);
     }
 
@@ -3041,7 +3049,7 @@ static void ui_proc_ppb_warmup(const UIElement* element, UICommand command, int3
 {
     static uint32_t ui_cache_warmup_time_seconds = 0;
     static uint32_t ui_edit_warmup_time_seconds = 0;
-    ui_proc_menu_edit_u32(element, command, encoder_step, "Warm-up Time:",
+    ui_proc_menu_edit_u32(element, command, encoder_step, "Warm-Up Time:",
         &ui_cache_warmup_time_seconds, &ui_edit_warmup_time_seconds, &(ee_storage.warmup_time_seconds), 14, "%6" PRIu32 " s",
         NULL, ui_change_ppb_warmup_time);
 }

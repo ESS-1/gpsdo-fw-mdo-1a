@@ -63,12 +63,12 @@ void init_ext_clock()
         bootlog_set_status(true);
 
         // Wait for PLL lock
-        bootlog_add("Wait PLL Lock");
+        bootlog_add("Wait PLL lock");
         if (pll_wait_primary_lock()) {
             bootlog_set_status(true);
 
             // Enable output
-            bootlog_add("Enable Output");
+            bootlog_add("Enable output");
             pll_enable_primary_output();
             bootlog_set_status(true);
         } else {
