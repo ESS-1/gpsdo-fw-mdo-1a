@@ -24,7 +24,7 @@
 #define ADC_MON_VUSB_MIN_MV              4500 // 5V -10%
 #define ADC_MON_VUSB_MAX_MV              5500 // 5V +10%
 
-#define ADC_MON_TEMP_MAX_DECI_C          800  // 80 deg. C
+#define ADC_MON_TEMP_MAX_DECI_C          700  // 70 deg. C
 
 // Variable exports
 typedef enum : uint8_t {

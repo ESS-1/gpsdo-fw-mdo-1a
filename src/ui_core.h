@@ -19,6 +19,7 @@ extern uint8_t ui_show_performance_timer;
 #define UI_COLOR_INACTIVE_TEXT      (ST7735_COLOR565(100, 100, 100))
 #define UI_COLOR_MENU_LABEL         (ST7735_COLOR565(170, 170, 170))
 #define UI_COLOR_ERROR              (ST7735_RED)
+#define UI_COLOR_SUCCESS            (ST7735_COLOR565(34, 177, 76))
 #define UI_COLOR_LINK               (ST7735_WHITE)
 
 #define UI_COLOR_PPS_INDICATOR      (ST7735_GREEN)

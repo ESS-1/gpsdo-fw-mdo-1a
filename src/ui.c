@@ -84,6 +84,12 @@ static const uint32_t ui_trend_v_scales[UI_Trend_VScale_Max + 1] = {
 // Common Elements
 //------------------------------------------------------------------------------
 static void ui_proc_back_to_main(const UIElement* element, UICommand command, int32_t encoder_step);
+static void ui_proc_monitor_vusb_flex(const UIElement* element, UICommand command, int32_t encoder_step, uint16_t* ui_cache, uint16_t value_offset);
+static void ui_proc_monitor_vusb(const UIElement* element, UICommand command, int32_t encoder_step, uint16_t* ui_cache);
+static void ui_proc_monitor_vdd(const UIElement* element, UICommand command, int32_t encoder_step, uint16_t* ui_cache);
+static void ui_proc_monitor_temp_flex(const UIElement* element, UICommand command, int32_t encoder_step, int16_t* ui_cache,
+    const char* label, uint16_t value_offset);
+static void ui_proc_monitor_temp(const UIElement* element, UICommand command, int32_t encoder_step, int16_t* ui_cache);
 
 
 //------------------------------------------------------------------------------
@@ -140,6 +146,40 @@ UIScreen ui_main_screen = {
     ui_main_screen_elements,
     NULL,
     ARRAY_SIZE(ui_main_screen_elements),
+    false,
+};
+
+
+//------------------------------------------------------------------------------
+// Device Status Screen Layout
+//------------------------------------------------------------------------------
+// Header
+static void ui_proc_device_status_label(const UIElement* element, UICommand command, int32_t encoder_step);
+// Page
+static void ui_proc_device_status_pll(const UIElement* element, UICommand command, int32_t encoder_step);
+static void ui_proc_device_status_vusb_mon(const UIElement* element, UICommand command, int32_t encoder_step);
+static void ui_proc_device_status_vusb_status(const UIElement* element, UICommand command, int32_t encoder_step);
+static void ui_proc_device_status_temp_mon(const UIElement* element, UICommand command, int32_t encoder_step);
+static void ui_proc_device_status_temp_status(const UIElement* element, UICommand command, int32_t encoder_step);
+static void ui_proc_device_status_warmup(const UIElement* element, UICommand command, int32_t encoder_step);
+
+static const UIElement ui_device_status_screen_elements[] = {
+    // Header
+    { 1,  1,  15,  16, UI_STYLE_FOCUSABLE, ui_proc_back_to_main              },
+    { 27, 6,  84,  10, UI_STYLE_NONE,      ui_proc_device_status_label       },
+    // Content
+    { 1,  20, 154, 23, UI_STYLE_NONE,      ui_proc_device_status_pll         },
+    { 1,  44, 91,  11, UI_STYLE_NONE,      ui_proc_device_status_vusb_mon    },
+    { 99, 44, 56,  11, UI_STYLE_NONE,      ui_proc_device_status_vusb_status },
+    { 1,  56, 91,  11, UI_STYLE_NONE,      ui_proc_device_status_temp_mon    },
+    { 99, 56, 56,  11, UI_STYLE_NONE,      ui_proc_device_status_temp_status },
+    { 1,  68, 154, 11, UI_STYLE_NONE,      ui_proc_device_status_warmup      },
+};
+
+UIScreen ui_device_status_screen = {
+    ui_device_status_screen_elements,
+    NULL,
+    ARRAY_SIZE(ui_device_status_screen_elements),
     false,
 };
 
@@ -779,6 +819,41 @@ static void ui_proc_back_to_main(const UIElement* element, UICommand command, in
     ui_proc_icon_navigation_btn(element, command, encoder_step, 15, 16, icon_back_15x16, &ui_main_screen);
 }
 
+static void ui_proc_monitor_vusb_flex(const UIElement* element, UICommand command, int32_t encoder_step, uint16_t* ui_cache, uint16_t value_offset)
+{
+    ui_proc_menu_readonly_custom_u16(element, command, encoder_step, "Vusb:",
+        ui_cache, adc_mon_vusb_mv, value_offset, ui_format_adc_voltage_fp2i3f_u16_8char, NULL);
+}
+
+static void ui_proc_monitor_vusb(const UIElement* element, UICommand command, int32_t encoder_step, uint16_t* ui_cache)
+{
+    ui_proc_monitor_vusb_flex(element, command, encoder_step, ui_cache, 14);
+}
+
+static void ui_proc_monitor_vdd(const UIElement* element, UICommand command, int32_t encoder_step, uint16_t* ui_cache)
+{
+    ui_proc_menu_readonly_custom_u16(element, command, encoder_step, "Vdd (3.3V):",
+        ui_cache, adc_mon_vdda_mv, 14, ui_format_adc_voltage_fp2i3f_u16_8char, NULL);
+}
+
+static void ui_proc_monitor_temp_flex(const UIElement* element, UICommand command, int32_t encoder_step, int16_t* ui_cache,
+    const char* label, uint16_t value_offset)
+{
+    ui_proc_menu_readonly_custom_i16(element, command, encoder_step, label,
+        ui_cache, adc_mon_temp_deci_c, value_offset, ui_format_adc_temperature_fp3i1f_i16_5char, NULL);
+
+    if (command & UICommand_Init) {
+        // Draw degree sign and "C"
+        ST7735_DrawImage(element->x + (value_offset + 6) * 7, element->y + 1, 7, 10, icon_symbol_degree_7x10);
+        ST7735_WriteStringNoWrap(element->x + (value_offset + 7) * 7, element->y + 1, element->height - 1, "C", Font_7x10, UI_COLOR_MENU_LABEL, UI_COLOR_BG);
+    }
+}
+
+static void ui_proc_monitor_temp(const UIElement* element, UICommand command, int32_t encoder_step, int16_t* ui_cache)
+{
+    ui_proc_monitor_temp_flex(element, command, encoder_step, ui_cache, "MCU Temp.:", 14);
+}
+
 
 //------------------------------------------------------------------------------
 // Main Menu
@@ -1093,54 +1168,6 @@ static void ui_proc_pps(const UIElement* element, UICommand command, int32_t enc
 //------------------------------------------------------------------------------
 // Status and Warmup Countdown
 //------------------------------------------------------------------------------
-static void ui_proc_status_show_status()
-{
-    // Messages
-    static const char* const msg_ok[] = {
-        "Normal operation",
-        "No errors",
-        NULL };
-    static const char* const msg_warmup[] = {
-        "Normal operation",
-        "OCXO warming up...",
-        NULL };
-    static const char* const msg_err_gen[] = {
-        "General PLL error",
-        NULL };
-    static const char* const msg_err_a[] = {
-        "Main PLL: no lock",
-        NULL };
-    static const char* const msg_err_b[] = {
-        "PLL 2: no lock",
-        NULL };
-    static const char* const msg_err_ab[] = {
-        "PLLs 1 & 2: No Lock",
-        NULL };
-
-    PllStatus status      = pll_status;
-    bool      err_general = ((status & PllStatus_General_Error) != 0);
-    bool      err_pll_a   = ((status & PllStatus_PllA_Error) != 0);
-    bool      err_pll_b   = ((status & PllStatus_PllB_Error) != 0);
-
-    // Select message
-    UI_MsgBoxType type = UI_MsgBoxType_Error;
-    const char* const* msg;
-    if (err_general) { // General PLL error
-        msg = msg_err_gen;
-    } else if (err_pll_a && err_pll_b) { // Both PLL: no lock
-        msg = msg_err_ab;
-    } else if (err_pll_a) { // PLL A: no lock
-        msg = msg_err_a;
-    } else if (err_pll_b) { // PLL B: no lock
-        msg = msg_err_b;
-    } else { // No error
-        msg  = frequency_adjustment_allowed() ? msg_ok : msg_warmup;
-        type = UI_MsgBoxType_Ok;
-    }
-
-    ui_msgbox(msg, type, UI_MsgBoxButton_Ok, NULL);
-}
-
 static void ui_proc_status(const UIElement* element, UICommand command, int32_t encoder_step)
 {
     static uint32_t ui_cache_warmup_remaining_sec = UINT16_MAX;
@@ -1232,7 +1259,7 @@ static void ui_proc_status(const UIElement* element, UICommand command, int32_t 
 
     // Show status
     if (command & UICommand_Click) {
-        ui_proc_status_show_status();
+        ui_show_screen(&ui_device_status_screen);
     }
 
     ui_default_element_proc(element, command, encoder_step);
@@ -1940,6 +1967,131 @@ static void ui_proc_trend_scroll(const UIElement* element, UICommand command, in
 
 
 //------------------------------------------------------------------------------
+// Device Status Procedures
+//------------------------------------------------------------------------------
+static void ui_proc_device_status_label(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    ui_proc_menu_label(element, command, encoder_step, "Status");
+}
+
+static void ui_proc_device_status_pll(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    static PllStatus ui_cache_pll_status = PllStatus_Ok;
+
+    uint16_t line1_y = element->y + 1;
+    uint16_t line2_y = line1_y + 12;
+
+    // Draw static labels
+    if (command & UICommand_Init) {
+        ST7735_WriteStringNoWrap(element->x,          line1_y, 10, "PLL:", Font_7x10, UI_COLOR_MENU_LABEL, UI_COLOR_BG);
+        ST7735_WriteStringNoWrap(element->x,          line2_y, 10, "1:",   Font_7x10, UI_COLOR_MENU_LABEL, UI_COLOR_BG);
+        ST7735_WriteStringNoWrap(element->x + 12 * 7, line2_y, 10, "2:",   Font_7x10, UI_COLOR_MENU_LABEL, UI_COLOR_BG);
+    }
+
+    // Draw status
+    if ((command & UICommand_Init) || pll_status != ui_cache_pll_status) {
+        ui_cache_pll_status = pll_status;
+
+        // Draw PLL A status
+        bool        err_pll_a     = (ui_cache_pll_status & PllStatus_PllA_Error);
+        uint16_t    err_pll_a_clr = err_pll_a ? UI_COLOR_ERROR : UI_COLOR_SUCCESS;
+        const char* err_pll_a_msg = err_pll_a
+            ? "No Lock"
+            : " Locked";
+        ST7735_WriteStringNoWrap(element->x + 3 * 7, line2_y, 10, err_pll_a_msg, Font_7x10, err_pll_a_clr, UI_COLOR_BG);
+
+        // Draw PLL B status
+        bool        err_pll_b     = (ui_cache_pll_status & PllStatus_PllB_Error);
+        uint16_t    err_pll_b_clr = err_pll_b ? UI_COLOR_ERROR : UI_COLOR_SUCCESS;
+        const char* err_pll_b_msg = err_pll_b
+            ? "No Lock"
+            : " Locked";
+        ST7735_WriteStringNoWrap(element->x + 15 * 7, line2_y, 10, err_pll_b_msg, Font_7x10, err_pll_b_clr, UI_COLOR_BG);
+
+        // Draw general PLL error status
+        bool        err_general     = (ui_cache_pll_status & PllStatus_General_Error);
+        uint16_t    err_general_clr = (err_general || err_pll_a || err_pll_b) ? UI_COLOR_ERROR : UI_COLOR_SUCCESS;
+        const char* err_general_msg = err_general
+            ? "General Error"
+            : (err_pll_a || err_pll_b
+                ? " Loss of Lock"
+                : "    No Errors");
+        ST7735_WriteStringNoWrap(element->x + 9 * 7, line1_y, 10, err_general_msg, Font_7x10, err_general_clr, UI_COLOR_BG);
+    }
+
+    ui_default_element_proc(element, command, encoder_step);
+}
+
+static void ui_proc_device_status_vusb_mon(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    static uint16_t ui_cache_adc_mon_vusb_mv = ADC_MON_VOLTAGE_NO_DATA;
+    ui_proc_monitor_vusb_flex(element, command, encoder_step, &ui_cache_adc_mon_vusb_mv, 5);
+}
+
+static void ui_proc_device_status_vusb_status(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    static AdcMonStatus ui_cache_adc_mon_status = AdcMonStatus_Ok;
+
+    if ((command & UICommand_Init) || adc_mon_status != ui_cache_adc_mon_status) {
+        ui_cache_adc_mon_status = adc_mon_status;
+
+        bool vusb_low  = (ui_cache_adc_mon_status & AdcMonStatus_Vusb_Low);
+        bool vusb_high = (ui_cache_adc_mon_status & AdcMonStatus_Vusb_High);
+
+        uint16_t color = (vusb_low || vusb_high) ? UI_COLOR_ERROR : UI_COLOR_SUCCESS;
+        const char* msg = vusb_high
+            ? "High"
+            : (vusb_low
+                ? " Low"
+                : "  OK");
+
+        ST7735_WriteStringNoWrap(element->x + 4 * 7, element->y + 1, element->height - 1, msg, Font_7x10, color, UI_COLOR_BG);
+    }
+
+    ui_default_element_proc(element, command, encoder_step);
+}
+
+static void ui_proc_device_status_temp_mon(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    static int16_t ui_cache_adc_mon_temp_deci_c = ADC_MON_TEMP_NO_DATA;
+    ui_proc_monitor_temp_flex(element, command, encoder_step, &ui_cache_adc_mon_temp_deci_c, "Temp", 5);
+}
+
+static void ui_proc_device_status_temp_status(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    static AdcMonStatus ui_cache_adc_mon_status = AdcMonStatus_Ok;
+
+    if ((command & UICommand_Init) || adc_mon_status != ui_cache_adc_mon_status) {
+        ui_cache_adc_mon_status = adc_mon_status;
+
+        bool overheat  = (ui_cache_adc_mon_status & AdcMonStatus_Overheat);
+
+        uint16_t color = overheat ? UI_COLOR_ERROR : UI_COLOR_SUCCESS;
+        const char* msg = overheat
+            ? "Overheat"
+            : "      OK";
+
+        ST7735_WriteStringNoWrap(element->x, element->y + 1, element->height - 1, msg, Font_7x10, color, UI_COLOR_BG);
+    }
+
+    ui_default_element_proc(element, command, encoder_step);
+}
+
+static void ui_proc_device_status_warmup(const UIElement* element, UICommand command, int32_t encoder_step)
+{
+    static bool ui_cache_warmup_done = false;
+
+    bool warmup_done = frequency_adjustment_allowed();
+    if ((command & UICommand_Init) || warmup_done != ui_cache_warmup_done) {
+        ui_cache_warmup_done = warmup_done;
+        ui_menu_draw_right_aligned(element, 4, warmup_done ? "" : "OCXO Warming Up...", UI_COLOR_MENU_LABEL);
+    }
+
+    ui_default_element_proc(element, command, encoder_step);
+}
+
+
+//------------------------------------------------------------------------------
 // Main Menu Procedures
 //------------------------------------------------------------------------------
 static void ui_proc_main_menu_label(const UIElement* element, UICommand command, int32_t encoder_step)
@@ -2045,46 +2197,22 @@ static void ui_proc_main_menu_update_fw(const UIElement* element, UICommand comm
     ui_proc_menu_link(element, command, encoder_step, "> Update Firmware...", &ui_update_fw_screen);
 }
 
-static void ui_proc_main_menu_vusb_impl(const UIElement* element, UICommand command, int32_t encoder_step, uint16_t* ui_cache)
-{
-    ui_proc_menu_readonly_custom_u16(element, command, encoder_step, "Vusb:",
-        ui_cache, adc_mon_vusb_mv, 14, ui_format_adc_voltage_fp2i3f_u16_8char, NULL);
-}
-
 static void ui_proc_main_menu_vusb(const UIElement* element, UICommand command, int32_t encoder_step)
 {
     static uint16_t ui_cache_adc_mon_vusb_mv = ADC_MON_VOLTAGE_NO_DATA;
-    ui_proc_main_menu_vusb_impl(element, command, encoder_step, &ui_cache_adc_mon_vusb_mv);
-}
-
-static void ui_proc_main_menu_vdd_impl(const UIElement* element, UICommand command, int32_t encoder_step, uint16_t* ui_cache)
-{
-    ui_proc_menu_readonly_custom_u16(element, command, encoder_step, "Vdd (3.3V):",
-        ui_cache, adc_mon_vdda_mv, 14, ui_format_adc_voltage_fp2i3f_u16_8char, NULL);
+    ui_proc_monitor_vusb(element, command, encoder_step, &ui_cache_adc_mon_vusb_mv);
 }
 
 static void ui_proc_main_menu_vdd(const UIElement* element, UICommand command, int32_t encoder_step)
 {
     static uint16_t ui_cache_adc_mon_vdda_mv = ADC_MON_VOLTAGE_NO_DATA;
-    ui_proc_main_menu_vdd_impl(element, command, encoder_step, &ui_cache_adc_mon_vdda_mv);
-}
-
-static void ui_proc_main_menu_temp_impl(const UIElement* element, UICommand command, int32_t encoder_step, int16_t* ui_cache)
-{
-    ui_proc_menu_readonly_custom_i16(element, command, encoder_step, "MCU Temp.:",
-        ui_cache, adc_mon_temp_deci_c, 14, ui_format_adc_temperature_fp3i1f_i16_5char, NULL);
-
-    if (command & UICommand_Init) {
-        // Draw degree sign and "C"
-        ST7735_DrawImage(element->x + 20 * 7, element->y + 1, 7, 10, icon_symbol_degree_7x10);
-        ST7735_WriteStringNoWrap(element->x + 21 * 7, element->y + 1, element->height - 1, "C", Font_7x10, UI_COLOR_MENU_LABEL, UI_COLOR_BG);
-    }
+    ui_proc_monitor_vdd(element, command, encoder_step, &ui_cache_adc_mon_vdda_mv);
 }
 
 static void ui_proc_main_menu_temp(const UIElement* element, UICommand command, int32_t encoder_step)
 {
     static int16_t ui_cache_adc_mon_temp_deci_c = ADC_MON_TEMP_NO_DATA;
-    ui_proc_main_menu_temp_impl(element, command, encoder_step, &ui_cache_adc_mon_temp_deci_c);
+    ui_proc_monitor_temp(element, command, encoder_step, &ui_cache_adc_mon_temp_deci_c);
 }
 
 static void ui_proc_main_menu_calibrate(const UIElement* element, UICommand command, int32_t encoder_step)
@@ -2288,13 +2416,13 @@ static void ui_proc_calibration_monitor(const UIElement* element, UICommand comm
     // Run appropriate element proc
     if (active_element != NULL) {
         if (active_element->proc == ui_proc_calibration_vref) {
-            ui_proc_main_menu_vdd_impl(element, subproc_cmd, encoder_step, &(ui_cache_adc_mon.vdda_mv));
+            ui_proc_monitor_vdd(element, subproc_cmd, encoder_step, &(ui_cache_adc_mon.vdda_mv));
             return;
         } else if (active_element->proc == ui_proc_calibration_vusb) {
-            ui_proc_main_menu_vusb_impl(element, subproc_cmd, encoder_step, &(ui_cache_adc_mon.vusb_mv));
+            ui_proc_monitor_vusb(element, subproc_cmd, encoder_step, &(ui_cache_adc_mon.vusb_mv));
             return;
         } else if ((active_element->proc == ui_proc_calibration_t_ofs) || (active_element->proc == ui_proc_calibration_t_slp)) {
-            ui_proc_main_menu_temp_impl(element, subproc_cmd, encoder_step, &(ui_cache_adc_mon.temp_deci_c));
+            ui_proc_monitor_temp(element, subproc_cmd, encoder_step, &(ui_cache_adc_mon.temp_deci_c));
             return;
         }
     }
