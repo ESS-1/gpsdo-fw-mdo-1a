@@ -28,6 +28,10 @@ message("Build type: " ${CMAKE_BUILD_TYPE})
 # Create an executable object type
 add_executable(${CMAKE_PROJECT_NAME})
 
+# Build picolibc
+include("${CMAKE_CURRENT_SOURCE_DIR}/lib/picolibc.cmake")
+
+# Build other libraries
 add_subdirectory(lib)
 
 # Add sources to executable
@@ -57,6 +61,19 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
     eeprom
     st7735
     si5351
+)
+
+# Add dependencies to ensure picolibc is built before the main project
+add_dependencies(STM32_Drivers picolibc_ext)
+add_dependencies(USB_Device_Library picolibc_ext)
+add_dependencies(${CMAKE_PROJECT_NAME} picolibc_ext)
+
+# Add picolibc to the link line
+target_link_libraries(${CMAKE_PROJECT_NAME}
+    -Wl,--start-group
+    "${PICOLIBC_INSTALL_DIR}/lib/libc.a"
+    gcc
+    -Wl,--end-group
 )
 
 # Include MDO-1A configuration constants
