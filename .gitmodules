@@ -10,3 +10,6 @@
 [submodule "lib/mdo-1a-config"]
 	path = lib/mdo-1a-config
 	url = https://github.com/ESS-1/gpsdo-fw-mdo-config.git
+[submodule "lib/picolibc"]
+	path = lib/picolibc
+	url = https://github.com/picolibc/picolibc.git
