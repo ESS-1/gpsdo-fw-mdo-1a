@@ -1,12 +1,13 @@
 include(ExternalProject)
 
-set(PICOLIBC_SOURCE_DIR  "${CMAKE_SOURCE_DIR}/lib/picolibc")
 set(PICOLIBC_ROOT_DIR    "${CMAKE_SOURCE_DIR}/build/picolibc-m3")
+set(PICOLIBC_SOURCE_DIR  "${CMAKE_SOURCE_DIR}/lib/picolibc")
 set(PICOLIBC_BINARY_DIR  "${PICOLIBC_ROOT_DIR}/build")
 set(PICOLIBC_INSTALL_DIR "${PICOLIBC_ROOT_DIR}/install")
 set(PICOLIBC_TOOLCHAIN   "${CMAKE_SOURCE_DIR}/lib/stm32/cmake/picolibc-cortex-m3.cmake")
 
 ExternalProject_Add(picolibc_ext
+    PREFIX              "${PICOLIBC_ROOT_DIR}"
     SOURCE_DIR          "${PICOLIBC_SOURCE_DIR}"
     BINARY_DIR          "${PICOLIBC_BINARY_DIR}"
     INSTALL_DIR         "${PICOLIBC_INSTALL_DIR}"
