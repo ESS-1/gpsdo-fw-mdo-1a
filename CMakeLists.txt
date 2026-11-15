@@ -118,6 +118,8 @@ target_link_options(${CMAKE_PROJECT_NAME} PRIVATE
     -Wl,--defsym=__BOOTLOADER_SIZE__=${BOOTLOADER_SIZE}
     -Wl,--defsym=__EEPROM_SIZE__=${EEPROM_SIZE}
     -Wl,--defsym=__APP_METADATA_SIZE__=${APP_METADATA_SIZE}
+    # Forbid heap usage at link time (no __wrap_* stubs provided, so any call breaks linking)
+    -Wl,--wrap=malloc,--wrap=calloc,--wrap=realloc,--wrap=free,--wrap=_sbrk
 )
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
