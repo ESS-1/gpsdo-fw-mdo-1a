@@ -25,11 +25,11 @@ enable_language(C ASM)
 
 message("Build type: " ${CMAKE_BUILD_TYPE})
 
-# Create an executable object type
-add_executable(${CMAKE_PROJECT_NAME})
-
 # Build picolibc
 include("${CMAKE_CURRENT_SOURCE_DIR}/lib/picolibc.cmake")
+
+# Create an executable object type
+add_executable(${CMAKE_PROJECT_NAME})
 
 # Build other libraries
 add_subdirectory(lib)
@@ -119,7 +119,7 @@ target_link_options(${CMAKE_PROJECT_NAME} PRIVATE
     -Wl,--defsym=__EEPROM_SIZE__=${EEPROM_SIZE}
     -Wl,--defsym=__APP_METADATA_SIZE__=${APP_METADATA_SIZE}
     # Forbid heap usage at link time (no __wrap_* stubs provided, so any call breaks linking)
-    -Wl,--wrap=malloc,--wrap=calloc,--wrap=realloc,--wrap=free,--wrap=_sbrk
+    -Wl,--wrap=malloc,--wrap=calloc,--wrap=realloc,--wrap=free,--wrap=sbrk,--wrap=_sbrk
 )
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)

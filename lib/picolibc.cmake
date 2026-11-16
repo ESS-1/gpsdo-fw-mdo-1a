@@ -47,9 +47,12 @@ execute_process(
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
-add_compile_options(
-    $<$<COMPILE_LANGUAGE:C>:-nostdinc>
-    "$<$<COMPILE_LANGUAGE:C>:SHELL:-isystem \"${PICOLIBC_INSTALL_DIR}/include\">"
-    "$<$<COMPILE_LANGUAGE:C>:SHELL:-isystem \"${GCC_BUILTIN_INCLUDE_DIR}\">"
-    "$<$<COMPILE_LANGUAGE:C>:SHELL:-isystem \"${GCC_FIXED_INCLUDE_DIR}\">"
+file(TO_CMAKE_PATH "${GCC_BUILTIN_INCLUDE_DIR}" GCC_BUILTIN_INCLUDE_DIR)
+file(TO_CMAKE_PATH "${GCC_FIXED_INCLUDE_DIR}" GCC_FIXED_INCLUDE_DIR)
+
+string(APPEND CMAKE_C_FLAGS
+    " -nostdinc"
+    " -isystem \"${PICOLIBC_INSTALL_DIR}/include\""
+    " -isystem \"${GCC_BUILTIN_INCLUDE_DIR}\""
+    " -isystem \"${GCC_FIXED_INCLUDE_DIR}\""
 )
