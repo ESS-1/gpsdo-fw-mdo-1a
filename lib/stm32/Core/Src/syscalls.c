@@ -166,7 +166,7 @@ int _fork(void)
   return -1;
 }
 
-int _execve(char *name, char **argv, char **env)
+int _execve(const char *name, char *const *argv, char *const *env)
 {
   (void)name;
   (void)argv;
