@@ -33,16 +33,6 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Get picolibc submodule SHA
-        id: picolibc_sha
-        run: echo "sha=$(git -C lib/picolibc rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-
-      - name: Cache picolibc
-        uses: actions/cache@v6
-        with:
-          path: build/picolibc-m3
-          key: picolibc-arch-${{ steps.picolibc_sha.outputs.sha }}-${{ hashFiles('.github/workflows/build-shared.yml', 'lib/picolibc.cmake', 'lib/stm32/cmake/picolibc-cortex-m3.cmake') }}
-
       - name: Display Tools Version
         run: |
           arm-none-eabi-gcc --version
