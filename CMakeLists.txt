@@ -25,9 +25,13 @@ enable_language(C ASM)
 
 message("Build type: " ${CMAKE_BUILD_TYPE})
 
+# Build picolibc
+include("${CMAKE_CURRENT_SOURCE_DIR}/lib/picolibc.cmake")
+
 # Create an executable object type
 add_executable(${CMAKE_PROJECT_NAME})
 
+# Build other libraries
 add_subdirectory(lib)
 
 # Add sources to executable
@@ -57,6 +61,19 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
     eeprom
     st7735
     si5351
+)
+
+# Add dependencies to ensure picolibc is built before the main project
+add_dependencies(STM32_Drivers picolibc_ext)
+add_dependencies(USB_Device_Library picolibc_ext)
+add_dependencies(${CMAKE_PROJECT_NAME} picolibc_ext)
+
+# Add picolibc to the link line
+target_link_libraries(${CMAKE_PROJECT_NAME}
+    -Wl,--start-group
+    "${PICOLIBC_INSTALL_DIR}/lib/libc.a"
+    gcc
+    -Wl,--end-group
 )
 
 # Include MDO-1A configuration constants
@@ -101,6 +118,8 @@ target_link_options(${CMAKE_PROJECT_NAME} PRIVATE
     -Wl,--defsym=__BOOTLOADER_SIZE__=${BOOTLOADER_SIZE}
     -Wl,--defsym=__EEPROM_SIZE__=${EEPROM_SIZE}
     -Wl,--defsym=__APP_METADATA_SIZE__=${APP_METADATA_SIZE}
+    # Forbid heap usage at link time (no __wrap_* stubs provided, so any call breaks linking)
+    -Wl,--wrap=malloc,--wrap=calloc,--wrap=realloc,--wrap=free,--wrap=sbrk,--wrap=_sbrk
 )
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)

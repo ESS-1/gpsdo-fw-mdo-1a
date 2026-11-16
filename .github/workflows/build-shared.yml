@@ -23,8 +23,7 @@ jobs:
             ninja \
             python \
             arm-none-eabi-gcc \
-            arm-none-eabi-binutils \
-            arm-none-eabi-newlib
+            arm-none-eabi-binutils
 
       - name: Configure Git Safe Directory
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
