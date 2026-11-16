@@ -317,6 +317,7 @@ void gpsdo()
     HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
 
     // If the encoder button is held, prompt to restore defaults
+    HAL_Delay(1);
     if (HAL_GPIO_ReadPin(ROTARY_PRESS_GPIO_Port, ROTARY_PRESS_Pin) == GPIO_PIN_RESET) {
         // Wait for the button to be released
         while (HAL_GPIO_ReadPin(ROTARY_PRESS_GPIO_Port, ROTARY_PRESS_Pin) == GPIO_PIN_RESET) { }

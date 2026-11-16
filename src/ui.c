@@ -52,7 +52,8 @@ static bool     ui_trend_sample_added               = false;
 
 // 'bars_per_grid' of all supported H Scales must be evenly divisible by UI_TREND_FRAME_BUFFER_NUM_BARS,
 // otherwise the trend will not be fully rendered.
-#define UI_TREND_FRAME_BUFFER_NUM_BARS 5
+#define UI_TREND_FRAME_BUFFER_NUM_BARS 10 // Can be reduced to 5 to save memory with minimal performance degradation
+
 static uint16_t ui_trend_frame_buffer[UI_TREND_HEIGHT * UI_TREND_FRAME_BUFFER_NUM_BARS] = { 0 };
 
 static const TrendHScale ui_trend_h_scales[UI_Trend_HScale_Max + 1] = {
